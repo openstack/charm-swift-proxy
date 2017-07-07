@@ -64,6 +64,7 @@ from charmhelpers.contrib.openstack.ha.utils import (
 from charmhelpers.contrib.hahelpers.cluster import (
     get_hacluster_config,
     is_elected_leader,
+    determine_api_port,
 )
 
 from charmhelpers.core.hookenv import (
@@ -704,12 +705,14 @@ def update_nrpe_config():
     nrpe.copy_nrpe_checks()
     nrpe.add_init_service_checks(nrpe_setup, services(), current_unit)
     nrpe.add_haproxy_checks(nrpe_setup, current_unit)
+    api_port = determine_api_port(config('bind-port'),
+                                  singlenode_mode=True)
     nrpe_setup.add_check(
         shortname="swift-proxy-healthcheck",
         description="Check Swift Proxy Healthcheck",
         check_cmd="/usr/lib/nagios/plugins/check_http \
-                  -I localhost -u /healthcheck -p 8070 \
-                  -e \"OK\""
+                  -I localhost -u /healthcheck -p {} \
+                  -e \"OK\"".format(api_port)
     )
     nrpe_setup.write()
 
