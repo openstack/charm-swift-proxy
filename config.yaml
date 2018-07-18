@@ -163,7 +163,7 @@ options:
   swift-hash:
     type: string
     default:
-    description: Hash to use across all swift-proxy servers - don't loose
+    description: Hash to use across all swift-proxy servers - don't lose
   dns-ha:
     type: boolean
     default: False
