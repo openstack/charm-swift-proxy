@@ -94,9 +94,12 @@ def add_dev(ring_path, dev):
     The dev is in the form of:
 
     new_dev = {
+        'region': node['region'],
         'zone': node['zone'],
         'ip': node['ip'],
+        'replication_ip': node['ip_rep']
         'port': port,
+        'replication_port': port_rep,
         'device': node['device'],
         'weight': 100,
         'meta': '',
@@ -115,6 +118,18 @@ def get_min_part_hours(ring_path):
 
     :param ring_path: The path for the ring
     :returns: integer that is the min_part_hours
+    """
+    builder = _load_builder(ring_path)
+    return builder.min_part_hours
+
+
+def get_current_replicas(ring_path):
+    """ Gets replicas from the ring (lp1815879)
+
+    :param ring_path: The path for the ring
+    :type ring_path: str
+    :returns: replicas
+    :rtype: int
     """
     builder = _load_builder(ring_path)
     return builder.min_part_hours
@@ -184,12 +199,19 @@ def has_minimum_zones(rings):
                 "result": False
             }
         builder = _load_builder(ring).to_dict()
+        if not builder['devs']:
+            return {
+                "result": False
+            }
         replicas = builder['replicas']
+        regions = [dev['region'] for dev in builder['devs'] if dev]
         zones = [dev['zone'] for dev in builder['devs'] if dev]
+        num_regions = len(set(regions))
         num_zones = len(set(zones))
-        if num_zones < replicas:
-            log = ("Not enough zones ({:d}) defined to satisfy minimum "
-                   "replicas (need >= {:d})".format(num_zones, replicas))
+        num_zones_in_regions = num_regions * num_zones
+        if num_zones_in_regions < replicas:
+            log = ("Not enough zones ({}) defined to satisfy minimum "
+                   "replicas (need >= {})".format(num_zones, int(replicas)))
             return {
                 "result": False,
                 "log": log,

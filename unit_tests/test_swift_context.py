@@ -152,6 +152,75 @@ class SwiftContextTestCase(unittest.TestCase):
 
         self.assertTrue(mock_config.called)
 
+    @mock.patch('lib.swift_context.config')
+    def test_get_read_affinity_no_config(self, mock_config):
+        mock_config.return_value = None
+        read_affinity = swift_context.get_read_affinity()
+
+        self.assertIsNone(read_affinity)
+
+    @mock.patch('lib.swift_context.config')
+    def test_get_read_affinity_config_not_malformed(self, mock_config):
+        mock_config.return_value = 'r1z1=100, r1=200, r2=300'
+        expected = 'r1z1=100, r1=200, r2=300'
+        read_affinity = swift_context.get_read_affinity()
+
+        self.assertEqual(expected, read_affinity)
+
+    @mock.patch('lib.swift_context.config')
+    def test_get_read_affinity_config_malformed(self, mock_config):
+        mock_config.return_value = 'XYZ'
+
+        with self.assertRaises(Exception):
+            swift_context.get_read_affinity()
+
+    @mock.patch('lib.swift_context.config')
+    def test_get_write_affinity_no_config(self, mock_config):
+        mock_config.return_value = None
+        write_affinity = swift_context.get_write_affinity()
+
+        self.assertIsNone(write_affinity)
+
+    @mock.patch('lib.swift_context.config')
+    def test_get_write_affinity_config_not_malformed(self, mock_config):
+        mock_config.return_value = 'r1, r2, r3'
+        expected = 'r1, r2, r3'
+        write_affinity = swift_context.get_write_affinity()
+
+        self.assertEqual(expected, write_affinity)
+
+    @mock.patch('lib.swift_context.config')
+    def test_get_write_affinity_config_malformed(self, mock_config):
+        mock_config.return_value = 'XYZ'
+
+        with self.assertRaises(Exception):
+            swift_context.get_write_affinity()
+
+    @mock.patch('lib.swift_context.config')
+    def test_get_write_affinity_node_count_no_config(self, mock_config):
+        mock_config.return_value = None
+        write_affinity_node_count = \
+            swift_context.get_write_affinity_node_count()
+
+        self.assertIsNone(write_affinity_node_count)
+
+    @mock.patch('lib.swift_context.config')
+    def test_get_write_affinity_node_count_config_not_malformed(self,
+                                                                mock_config):
+        mock_config.return_value = '2 * replicas'
+        expected = '2 * replicas'
+        write_affinity_node_count = \
+            swift_context.get_write_affinity_node_count()
+
+        self.assertEqual(expected, write_affinity_node_count)
+
+    @mock.patch('lib.swift_context.config')
+    def test_get_write_affinity_node_count_config_malformed(self, mock_config):
+        mock_config.return_value = 'XYZ'
+
+        with self.assertRaises(Exception):
+            swift_context.get_write_affinity_node_count()
+
 
 class SwiftS3ContextTestCase(unittest.TestCase):
 

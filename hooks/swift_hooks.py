@@ -66,7 +66,16 @@ from lib.swift_utils import (
     try_initialize_swauth,
     clear_storage_rings_available,
     determine_replicas,
+    fetch_swift_rings_and_builders,
+    is_ring_consumer,
+    is_ring_distributor,
+    set_role_ring_consumer,
+    set_role_ring_distributor,
+    unset_role_ring_consumer,
+    unset_role_ring_distributor,
 )
+
+from lib.swift_context import get_swift_hash
 
 import charmhelpers.contrib.openstack.utils as openstack
 
@@ -94,6 +103,8 @@ from charmhelpers.core.hookenv import (
     Hooks, UnregisteredHookError,
     open_port,
     status_set,
+    is_leader,
+    leader_get,
 )
 from charmhelpers.core.host import (
     service_reload,
@@ -183,8 +194,10 @@ def config_changed():
         do_openstack_upgrade(CONFIGS)
         status_set('maintenance', 'Running openstack upgrade')
 
-    status_set('maintenance', 'Updating and (maybe) balancing rings')
-    update_rings(min_part_hours=config('min-hours'))
+    if not leader_get('swift-proxy-rings-consumer'):
+        status_set('maintenance', 'Updating and (maybe) balancing rings')
+        update_rings(min_part_hours=config('min-hours'),
+                     replicas=config('replicas'))
 
     if not config('disable-ring-balance') and is_elected_leader(SWIFT_HA_RES):
         # Try ring balance. If rings are balanced, no sync will occur.
@@ -266,7 +279,9 @@ def storage_joined(rid=None):
 
 
 def get_host_ip(rid=None, unit=None):
-    addr = relation_get('private-address', rid=rid, unit=unit)
+    addr = relation_get(rid=rid, unit=unit).get('ip_cls')
+    if not addr:
+        addr = relation_get('private-address', rid=rid, unit=unit)
     if config('prefer-ipv6'):
         host_ip = format_ipv6_addr(addr)
         if host_ip:
@@ -332,6 +347,15 @@ def storage_changed():
         'object_port': relation_get('object_port'),
         'container_port': relation_get('container_port'),
     }
+    node_repl_settings = {
+        'ip_rep': relation_get('ip_rep'),
+        'region': relation_get('region'),
+        'account_port_rep': relation_get('account_port_rep'),
+        'object_port_rep': relation_get('object_port_rep'),
+        'container_port_rep': relation_get('container_port_rep')}
+
+    if any(node_repl_settings.values()):
+        node_settings.update(node_repl_settings)
 
     if None in node_settings.values():
         missing = [k for k, v in node_settings.items() if v is None]
@@ -339,8 +363,11 @@ def storage_changed():
             "relation (missing={})".format(', '.join(missing)), level=INFO)
         return None
 
-    for k in ['zone', 'account_port', 'object_port', 'container_port']:
-        node_settings[k] = int(node_settings[k])
+    for k in ['region', 'zone', 'account_port', 'account_port_rep',
+              'object_port', 'object_port_rep', 'container_port',
+              'container_port_rep']:
+        if node_settings.get(k) is not None:
+            node_settings[k] = int(node_settings[k])
 
     CONFIGS.write_all()
 
@@ -759,6 +786,70 @@ def post_series_upgrade():
             started = service_start(service)
             if not started:
                 raise Exception("{} didn't start cleanly.".format(service))
+
+
+@hooks.hook('rings-distributor-relation-joined')
+def rings_distributor_joined():
+    if is_ring_consumer():
+        msg = ("Swift Proxy cannot act as both rings distributor and rings "
+               "consumer")
+        status_set('blocked', msg)
+        raise SwiftProxyCharmException(msg)
+    if is_leader():
+        set_role_ring_distributor()
+
+
+@hooks.hook('rings-distributor-relation-changed')
+def rings_distributor_changed():
+    broadcast_rings_available()
+
+
+@hooks.hook('rings-distributor-relation-departed')
+def rings_distributor_departed():
+    if is_leader():
+        unset_role_ring_distributor()
+
+
+@hooks.hook('rings-consumer-relation-joined')
+def rings_consumer_joined():
+    if is_ring_distributor():
+        msg = ("Swift Proxy cannot act as both rings distributor and rings "
+               "consumer")
+        status_set('blocked', msg)
+    elif is_ring_consumer():
+        msg = "Swift Proxy already acting as rings consumer"
+        status_set('blocked', msg)
+    elif is_leader():
+        set_role_ring_consumer()
+
+
+@hooks.hook('rings-consumer-relation-changed')
+@sync_builders_and_rings_if_changed
+@restart_on_change(restart_map())
+def rings_consumer_changed():
+    """Based on 'swift_storage_relation_changed' function from the
+    swift-storage charm."""
+    rings_url = relation_get('rings_url')
+    swift_hash = relation_get('swift_hash')
+    if not all([rings_url, swift_hash]):
+        log('rings_consumer_relation_changed: Peer not ready?')
+        return
+    if swift_hash != get_swift_hash():
+        msg = "Swift hash has to be unique in multi-region setup"
+        status_set('blocked', msg)
+        raise SwiftProxyCharmException(msg)
+    try:
+        fetch_swift_rings_and_builders(rings_url)
+    except CalledProcessError:
+        log("Failed to sync rings from {} - no longer available from that "
+            "unit?".format(rings_url), level=WARNING)
+    broadcast_rings_available()
+
+
+@hooks.hook('rings-consumer-relation-departed')
+def rings_consumer_departed():
+    if is_leader():
+        unset_role_ring_consumer()
 
 
 def main():

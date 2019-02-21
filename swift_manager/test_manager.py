@@ -48,7 +48,10 @@ class TestSwiftManager(unittest.TestCase):
         for ring in MOCK_SWIFT_RINGS:
             mock_rings[ring] = {
                 'replicas': 3,
-                'devs': [{'zone': 1}, {'zone': 2}, None, {'zone': 3}],
+                'devs': [{'region': 1, 'zone': 1},
+                         {'region': 1, 'zone': 2},
+                         None,
+                         {'region': 1, 'zone': 3}],
             }
         ret = manager.has_minimum_zones(MOCK_SWIFT_RINGS)
         self.assertTrue(ret['result'])

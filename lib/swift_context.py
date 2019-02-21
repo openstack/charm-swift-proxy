@@ -1,4 +1,5 @@
 import os
+import re
 import uuid
 
 from charmhelpers.core.hookenv import (
@@ -11,6 +12,7 @@ from charmhelpers.core.hookenv import (
     service_name,
     leader_get,
     DEBUG,
+    status_set,
 )
 from charmhelpers.contrib.openstack.context import (
     OSContextGenerator,
@@ -34,6 +36,10 @@ from charmhelpers.contrib.openstack.utils import (
 
 SWIFT_HASH_FILE = '/var/lib/juju/swift-hash-path.conf'
 WWW_DIR = '/var/www/swift-rings'
+
+
+class SwiftProxyCharmException(Exception):
+    pass
 
 
 class HAProxyContext(OSContextGenerator):
@@ -132,7 +138,11 @@ class SwiftIdentityContext(OSContextGenerator):
             'statsd_port': config('statsd-port'),
             'statsd_sample_rate': config('statsd-sample-rate'),
             'static_large_object_segments': config(
-                'static-large-object-segments')
+                'static-large-object-segments'),
+            'enable_multi_region': config('enable-multi-region'),
+            'read_affinity': get_read_affinity(),
+            'write_affinity': get_write_affinity(),
+            'write_affinity_node_count': get_write_affinity_node_count()
         }
 
         admin_key = leader_get('swauth-admin-key')
@@ -251,6 +261,72 @@ def get_swift_hash():
             hashfile.write(swift_hash)
 
     return swift_hash
+
+
+def get_read_affinity():
+    """ Gets read-affinity config option (lp1815879)
+
+    Checks whether read-affinity config option is set correctly and if so
+    returns its value.
+
+    :returns: read-affinity config option
+    :rtype: str
+    :raises: SwiftProxyCharmException
+    """
+    if config('read-affinity'):
+        read_affinity = config('read-affinity')
+        pattern = re.compile("^r\d+z?(\d+)?=\d+(,\s?r\d+z?(\d+)?=\d+)*$")
+        if not pattern.match(read_affinity):
+            msg = "'read-affinity' config option is malformed"
+            status_set('blocked', msg)
+            raise SwiftProxyCharmException(msg)
+        return read_affinity
+    else:
+        return None
+
+
+def get_write_affinity():
+    """ Gets write-affinity config option (lp1815879)
+
+    Checks whether write-affinity config option is set correctly and if so
+    returns its value.
+
+    :returns: write-affinity config option
+    :rtype: str
+    :raises: SwiftProxyCharmException
+    """
+    if config('write-affinity'):
+        write_affinity = config('write-affinity')
+        pattern = re.compile("^r\d+(,\s?r\d+)*$")
+        if not pattern.match(write_affinity):
+            msg = "'write-affinity' config option is malformed"
+            status_set('blocked', msg)
+            raise SwiftProxyCharmException(msg)
+        return write_affinity
+    else:
+        return None
+
+
+def get_write_affinity_node_count():
+    """ Gets write-affinity-node-count config option (lp1815879)
+
+    Checks whether write-affinity-node-count config option is set correctly
+    and if so returns its value.
+
+    :returns: write-affinity-node-count config option
+    :rtype: str
+    :raises: SwiftProxyCharmException
+    """
+    if config('write-affinity-node-count'):
+        write_affinity_node_count = config('write-affinity-node-count')
+        pattern = re.compile("^\d+(\s\*\sreplicas)?$")
+        if not pattern.match(write_affinity_node_count):
+            msg = "'write-affinity-node-count' config option is malformed"
+            status_set('blocked', msg)
+            raise SwiftProxyCharmException(msg)
+        return write_affinity_node_count
+    else:
+        return None
 
 
 class SwiftHashContext(OSContextGenerator):

@@ -104,6 +104,67 @@ single service unit.  New units will be distributed across the existing zones.
     # swift-storage/4 is assigned to zone 2.
     etc.
 
+**Global Cluster.**
+
+This charm supports Swift Global Cluster feature as described at
+https://docs.openstack.org/swift/latest/overview_global_cluster.html .
+In order to enable it the 'enable-multi-region' option has to be set to 'True'.
+Additional options ('read-affinity', 'write-affinity' and
+'write-affinity-node-count') can be used to influence how the objects will be
+read and written.
+
+In addition storage nodes have to be configured with the 'region' option and
+related to all proxies participating in the global cluster. More than one proxy
+can be deployed, but they have to be related using 'rings-distributor'
+/ 'rings-consumer' endpoints and the 'swift-hash' option has to be unique across
+them. Only one proxy can act as a rings-distributor at a time.
+
+    $ cat >swift.cfg <<END
+    sp-r1:
+        region: RegionOne
+        zone-assignment: manual
+        replicas: 2
+        enable-multi-region: true
+        swift-hash: "global-cluster"
+        read-affinity: "r1=100, r2=200"
+        write-affinity: "r1, r2"
+        write-affinity-node-count: "1"
+    sp-r2:
+        region: RegionTwo
+        zone-assignment: manual
+        replicas: 2
+        enable-multi-region: true
+        swift-hash: "global-cluster"
+        read-affinity: "r2=100, r1=200"
+        write-affinity: "r2, r1"
+        write-affinity-node-count: "1"
+    ss-r1:
+        storage-region: 1
+        zone: 1
+        block-device: /etc/swift/storage.img|2G
+    ss-r2:
+        storage-region: 2
+        zone: 1
+        block-device: /etc/swift/storage.img|2G
+    END
+    $ juju deploy --config=swift.cfg swift-proxy sp-r1
+    $ juju deploy --config=swift.cfg swift-proxy sp-r2
+    $ juju deploy --config=swift.cfg swift-storage ss-r1
+    $ juju deploy --config=swift.cfg swift-storage ss-r2
+    $ juju add-relation sp-r1:swift-storage ss-r1:swift-storage
+    $ juju add-relation sp-r1:swift-storage ss-r2:swift-storage
+    $ juju add-relation sp-r2:swift-storage ss-r1:swift-storage
+    $ juju add-relation sp-r2:swift-storage ss-r2:swift-storage
+    $ juju add-relation sp-r1:rings-distributor sp-r2:rings-consumer
+
+In case of the failure of 'sp-r1', if it is not possible to recover it, the
+relation should be removed:
+
+    $ juju remove-relation sp-r2:rings-consumer sp-r1:rings-distributor
+
+Additional proxy can be deployed later and related to 'swift-proxy-region2'
+using 'rings-distributor' / 'rings-consumer' endpoints.
+
 **Installation repository.**
 
 The 'openstack-origin' setting allows Swift to be installed from installation

@@ -201,6 +201,10 @@ CONFIG_FILES = OrderedDict([
     }),
 ])
 
+RING_CONSUMER_ROLE = 'swift-proxy-rings-consumer'
+
+RING_DISTRIBUTOR_ROLE = 'swift-proxy-rings-distributor'
+
 
 class SwiftProxyCharmException(Exception):
     pass
@@ -540,6 +544,7 @@ def exists_in_ring(ring_path, node):
 
 def add_to_ring(ring_path, node):
     port = _ring_port(ring_path, node)
+    port_rep = _ring_port_rep(ring_path, node)
 
     # Note: this code used to attempt to calculate new dev ids, but made
     # various assumptions (e.g. in order devices, all devices in the ring
@@ -554,6 +559,12 @@ def add_to_ring(ring_path, node):
         'weight': 100,
         'meta': '',
     }
+    if port_rep:
+        new_dev.update({
+            'region': node['region'],
+            'replication_ip': node['ip_rep'],
+            'replication_port': port_rep,
+        })
     get_manager().add_dev(ring_path, new_dev)
     msg = 'Added new device to ring {}: {}'.format(ring_path, new_dev)
     log(msg, level=INFO)
@@ -607,6 +618,27 @@ def _ring_port(ring_path, node):
     for name in ['account', 'object', 'container']:
         if name in ring_path:
             return node[('{}_port'.format(name))]
+
+
+def _ring_port_rep(ring_path, node):
+    """ Determine replication port (lp1815879)
+
+    Determine correct replication port from relation settings for a given ring
+    file.
+
+    :param ring_path: path to the ring
+    :param node: storage node
+    :type ring_path: str
+    :type node: str
+    :returns: replication port
+    :rtype: int
+    """
+    for name in ['account', 'object', 'container']:
+        if name in ring_path:
+            try:
+                return node[('{}_port_rep'.format(name))]
+            except KeyError:
+                pass
 
 
 def get_zone(assignment_policy):
@@ -909,7 +941,7 @@ def sync_builders_and_rings_if_changed(f):
 
 
 @sync_builders_and_rings_if_changed
-def update_rings(nodes=None, min_part_hours=None):
+def update_rings(nodes=None, min_part_hours=None, replicas=None):
     """Update builder with node settings and balance rings if necessary.
 
     Also update min_part_hours if provided.
@@ -948,8 +980,28 @@ def update_rings(nodes=None, min_part_hours=None):
                     add_to_ring(ring, node)
                     balance_required = True
 
+    if replicas is not None:
+        for ring, path in SWIFT_RINGS.items():
+            current_replicas = get_current_replicas(path)
+            if replicas != current_replicas:
+                update_replicas(path, replicas)
+                balance_required = True
+
     if balance_required:
         balance_rings()
+
+
+def get_current_replicas(path):
+    """ Gets replicas from the ring (lp1815879)
+
+    Proxy to the 'manager.py:get_current_replicas()' function
+
+    :param path: path to the ring
+    :type path: str
+    :returns: replicas
+    :rtype: int
+    """
+    return get_manager().get_current_replicas(path)
 
 
 def get_min_part_hours(path):
@@ -968,6 +1020,25 @@ def set_min_part_hours(path, value):
     except subprocess.CalledProcessError:
         raise SwiftProxyCharmException(
             "Failed to set min_part_hours={} on {}".format(value, path))
+
+
+def update_replicas(path, replicas):
+    """ Updates replicas (lp1815879)
+
+    Updates the number of replicas in the ring.
+
+    :param path: path to the ring
+    :param replicas: number of replicas
+    :type path: str
+    :type replicas: int
+    :raises: SwiftProxyCharmException
+    """
+    cmd = ['swift-ring-builder', path, 'set_replicas', str(replicas)]
+    try:
+        subprocess.check_call(cmd)
+    except subprocess.CalledProcessError:
+        raise SwiftProxyCharmException(
+            "Failed to set replicas={} on {}".format(replicas, path))
 
 
 @sync_builders_and_rings_if_changed
@@ -1061,7 +1132,7 @@ def broadcast_rings_available(storage=True, builders_only=False,
     if storage:
         # TODO: get ack from storage units that they are synced before
         # syncing proxies.
-        notify_storage_rings_available(broker_timestamp)
+        notify_storage_and_consumers_rings_available(broker_timestamp)
     else:
         log("Skipping notify storage relations", level=DEBUG)
 
@@ -1111,7 +1182,7 @@ def cluster_sync_rings(peers_only=False, builders_only=False, token=None):
         relation_set(relation_id=rid, relation_settings=rq)
 
 
-def notify_storage_rings_available(broker_timestamp):
+def notify_storage_and_consumers_rings_available(broker_timestamp):
     """Notify peer swift-storage relations that they should synchronise ring
     and builder files.
 
@@ -1138,6 +1209,13 @@ def notify_storage_rings_available(broker_timestamp):
     log("Notifying storage nodes that new rings are ready for sync.",
         level=INFO)
     for relid in relation_ids('swift-storage'):
+        relation_set(relation_id=relid, swift_hash=get_swift_hash(),
+                     rings_url=rings_url, broker_timestamp=broker_timestamp,
+                     trigger=trigger)
+    # Notify consumer proxy nodes that there is a new ring to fetch.
+    log("Notifying consumer proxy nodes (if any) that new rings are ready for "
+        "sync.", level=INFO)
+    for relid in relation_ids('rings-distributor'):
         relation_set(relation_id=relid, swift_hash=get_swift_hash(),
                      rings_url=rings_url, broker_timestamp=broker_timestamp,
                      trigger=trigger)
@@ -1411,3 +1489,74 @@ def determine_replicas(ring):
             return config('replicas')
     else:
         return config('replicas')
+
+
+def fetch_swift_rings_and_builders(rings_url):
+    """ Fetches Swift rings and builders (lp1815879)
+
+    Fetches Swift rings and builders from the distributor Swift Proxy. Based on
+    the 'fetch_swift_rings' function from the swift-storage charm.
+
+    :param rings_url: URL to the rings store
+    :type rings_url: str
+    """
+    log('Fetching swift rings from proxy @ {}.'.format(rings_url), level=INFO)
+    target = SWIFT_CONF_DIR
+    tmpdir = tempfile.mkdtemp(prefix='swiftrings')
+    try:
+        synced = []
+        for server in ['account', 'object', 'container']:
+            for ext in [SWIFT_RING_EXT, 'builder']:
+                url = '{}/{}.{}'.format(rings_url, server, ext)
+                log('Fetching {}.'.format(url), level=DEBUG)
+                ring = '{}.{}'.format(server, ext)
+                cmd = ['wget', url, '--retry-connrefused', '-t', '10', '-O',
+                       os.path.join(tmpdir, ring)]
+                subprocess.check_call(cmd)
+                synced.append(ring)
+
+        # Once all have been successfully downloaded, move them to actual
+        # location.
+        for f in synced:
+            os.rename(os.path.join(tmpdir, f), os.path.join(target, f))
+    finally:
+        shutil.rmtree(tmpdir)
+
+
+def is_role(role_name):
+    return leader_get(role_name)
+
+
+def set_role(role_name, has_role=True):
+    if has_role:
+        # The value is irrelevant the presence of the key in the leaderdb shows
+        # that this app has role_name. However set it to True to make things
+        # clear for any casual observer
+        leader_set({role_name: True})
+    else:
+        # Unset the key to show it does not have the role.
+        leader_set({role_name: None})
+
+is_ring_consumer = functools.partial(
+    is_role,
+    role_name=RING_CONSUMER_ROLE)
+is_ring_distributor = functools.partial(
+    is_role,
+    role_name=RING_DISTRIBUTOR_ROLE)
+
+set_role_ring_consumer = functools.partial(
+    set_role,
+    role_name=RING_CONSUMER_ROLE,
+    has_role=True)
+set_role_ring_distributor = functools.partial(
+    set_role,
+    role_name=RING_DISTRIBUTOR_ROLE,
+    has_role=True)
+unset_role_ring_consumer = functools.partial(
+    set_role,
+    role_name=RING_CONSUMER_ROLE,
+    has_role=False)
+unset_role_ring_distributor = functools.partial(
+    set_role,
+    role_name=RING_DISTRIBUTOR_ROLE,
+    has_role=False)

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import importlib
+import subprocess
 import sys
 import uuid
 
@@ -23,17 +24,19 @@ from mock import (
     patch,
     MagicMock,
 )
-
+import lib.swift_utils
 # python-apt is not installed as part of test-requirements but is imported by
 # some charmhelpers modules so create a fake import.
 sys.modules['apt'] = MagicMock()
 sys.modules['apt_pkg'] = MagicMock()
 
 with patch('charmhelpers.contrib.hardening.harden.harden') as mock_dec, \
+        patch('lib.swift_utils.sync_builders_and_rings_if_changed') as rdec, \
         patch('charmhelpers.core.hookenv.log'), \
         patch('lib.swift_utils.register_configs'):
     mock_dec.side_effect = (lambda *dargs, **dkwargs: lambda f:
                             lambda *args, **kwargs: f(*args, **kwargs))
+    rdec.side_effect = lambda f: f
     import hooks.swift_hooks as swift_hooks
     importlib.reload(swift_hooks)
 
@@ -262,3 +265,235 @@ class SwiftHooksTestCase(unittest.TestCase):
         )
         try_initialize_swauth.assert_called_once()
         mock_clear_storage_rings_available.assert_called_once()
+
+    @patch.object(swift_hooks, 'log')
+    @patch.object(swift_hooks, 'service_restart')
+    @patch.object(swift_hooks.openstack, 'is_unit_paused_set')
+    @patch.object(swift_hooks, 'update_rings')
+    @patch.object(swift_hooks, 'config')
+    @patch.object(swift_hooks, 'get_zone')
+    @patch.object(swift_hooks, 'update_rsync_acls')
+    @patch.object(swift_hooks, 'get_host_ip')
+    @patch.object(swift_hooks, 'is_elected_leader')
+    @patch.object(swift_hooks, 'relation_get')
+    def test_swift_storage_changed(self, relation_get, is_elected_leader,
+                                   get_host_ip, update_rsync_acls, get_zone,
+                                   config, update_rings, is_unit_paused_set,
+                                   service_restart, log):
+        is_elected_leader.return_value = True
+        get_host_ip.return_value = '10.0.0.10'
+        rel_data = {
+            'account_port': '6002',
+            'container_port': '6001',
+            'device': 'vdc',
+            'egress-subnets': '10.5.0.37/32',
+            'ingress-address': '10.5.0.37',
+            'object_port': '6000',
+            'private-address': '10.5.0.37',
+            'zone': '1'}
+        relation_get.side_effect = lambda x: rel_data.get(x)
+        swift_hooks.storage_changed()
+        update_rings.assert_called_once_with([{
+            'ip': '10.0.0.10',
+            'zone': 1,
+            'account_port': 6002,
+            'object_port': 6000,
+            'container_port': 6001,
+            'device': 'vdc'}])
+
+    @patch.object(swift_hooks, 'status_set')
+    @patch.object(swift_hooks, 'is_leader')
+    @patch.object(lib.swift_utils, 'leader_get')
+    @patch.object(lib.swift_utils, 'leader_set')
+    def test_rings_distributor_joined(self, leader_set, leader_get, is_leader,
+                                      status_set):
+        leader_get.return_value = None
+        is_leader.return_value = True
+        swift_hooks.rings_distributor_joined()
+        leader_set.assert_called_once_with(
+            {'swift-proxy-rings-distributor': True})
+        leader_set.reset_mock()
+        is_leader.return_value = False
+        swift_hooks.rings_distributor_joined()
+        self.assertFalse(leader_set.called)
+
+    @patch.object(swift_hooks, 'status_set')
+    @patch.object(lib.swift_utils, 'leader_get')
+    def test_rings_distributor_joined_consumer(self, leader_get, status_set):
+        leader_get.return_value = True
+        with self.assertRaises(lib.swift_utils.SwiftProxyCharmException):
+            swift_hooks.rings_distributor_joined()
+        status_set.assert_called_once_with(
+            'blocked',
+            ('Swift Proxy cannot act as both rings distributor and rings '
+             'consumer'))
+
+    @patch.object(swift_hooks, 'broadcast_rings_available')
+    def test_rings_distributor_changed(self, broadcast_rings_available):
+        swift_hooks.rings_distributor_changed()
+        broadcast_rings_available.assert_called_once_with()
+
+    @patch.object(swift_hooks, 'is_leader')
+    @patch.object(lib.swift_utils, 'leader_set')
+    def test_rings_distributor_departed(self, leader_set, is_leader):
+        is_leader.return_value = True
+        swift_hooks.rings_distributor_departed()
+        leader_set.assert_called_once_with(
+            {'swift-proxy-rings-distributor': None})
+        leader_set.reset_mock()
+        is_leader.return_value = False
+        swift_hooks.rings_distributor_departed()
+        self.assertFalse(leader_set.called)
+
+    @patch.object(swift_hooks, 'is_leader')
+    @patch.object(lib.swift_utils, 'leader_get')
+    @patch.object(lib.swift_utils, 'leader_set')
+    def test_rings_consumer_joined(self, leader_set, leader_get, is_leader):
+        leader_data = {}
+        leader_get.side_effect = lambda x: leader_data.get(x)
+        is_leader.return_value = True
+        swift_hooks.rings_consumer_joined()
+        leader_set.assert_called_once_with(
+            {'swift-proxy-rings-consumer': True})
+        leader_set.reset_mock()
+        is_leader.return_value = False
+        swift_hooks.rings_consumer_joined()
+        self.assertFalse(leader_set.called)
+
+    @patch.object(lib.swift_utils, 'leader_get')
+    @patch.object(swift_hooks, 'status_set')
+    def test_rings_consumer_joined_distributor(self, status_set, leader_get):
+        leader_data = {
+            'swift-proxy-rings-distributor': True}
+        leader_get.side_effect = lambda x: leader_data.get(x)
+        swift_hooks.rings_consumer_joined()
+        status_set.assert_called_once_with(
+            'blocked',
+            ('Swift Proxy cannot act as both rings distributor and rings '
+             'consumer'))
+
+    @patch.object(lib.swift_utils, 'leader_get')
+    @patch.object(swift_hooks, 'status_set')
+    def test_rings_consumer_joined_consumer(self, status_set, leader_get):
+        leader_data = {
+            'swift-proxy-rings-consumer': True}
+        leader_get.side_effect = lambda x: leader_data.get(x)
+        swift_hooks.rings_consumer_joined()
+        status_set.assert_called_once_with(
+            'blocked',
+            'Swift Proxy already acting as rings consumer')
+
+    @patch.object(swift_hooks, 'get_swift_hash')
+    @patch.object(swift_hooks, 'broadcast_rings_available')
+    @patch.object(swift_hooks, 'fetch_swift_rings_and_builders')
+    @patch.object(swift_hooks, 'relation_get')
+    def test_rings_consumer_changed(self, relation_get,
+                                    fetch_swift_rings_and_builders,
+                                    broadcast_rings_available,
+                                    get_swift_hash):
+        rel_data = {
+            'rings_url': 'http://some-url:999',
+            'swift_hash': 'swhash'}
+        relation_get.side_effect = lambda x: rel_data.get(x)
+        get_swift_hash.return_value = 'swhash'
+        swift_hooks.rings_consumer_changed()
+        fetch_swift_rings_and_builders.assert_called_once_with(
+            'http://some-url:999')
+        broadcast_rings_available.assert_called_once_with()
+
+    @patch.object(swift_hooks, 'log')
+    @patch.object(swift_hooks, 'get_swift_hash')
+    @patch.object(swift_hooks, 'broadcast_rings_available')
+    @patch.object(swift_hooks, 'fetch_swift_rings_and_builders')
+    @patch.object(swift_hooks, 'relation_get')
+    def test_rings_consumer_changed_no_url(self, relation_get,
+                                           fetch_swift_rings_and_builders,
+                                           broadcast_rings_available,
+                                           get_swift_hash,
+                                           log):
+        rel_data = {'swift_hash': 'swhash'}
+        relation_get.side_effect = lambda x: rel_data.get(x)
+        swift_hooks.rings_consumer_changed()
+        self.assertFalse(fetch_swift_rings_and_builders.called)
+        self.assertFalse(broadcast_rings_available.called)
+        log.assert_called_once_with(
+            'rings_consumer_relation_changed: Peer not ready?')
+
+    @patch.object(swift_hooks, 'log')
+    @patch.object(swift_hooks, 'get_swift_hash')
+    @patch.object(swift_hooks, 'broadcast_rings_available')
+    @patch.object(swift_hooks, 'fetch_swift_rings_and_builders')
+    @patch.object(swift_hooks, 'relation_get')
+    def test_rings_consumer_changed_empty_str(self, relation_get,
+                                              fetch_swift_rings_and_builders,
+                                              broadcast_rings_available,
+                                              get_swift_hash,
+                                              log):
+        rel_data = {
+            'rings_url': '',
+            'swift_hash': 'swhash'}
+        relation_get.side_effect = lambda x: rel_data.get(x)
+        swift_hooks.rings_consumer_changed()
+        self.assertFalse(fetch_swift_rings_and_builders.called)
+        self.assertFalse(broadcast_rings_available.called)
+        log.assert_called_once_with(
+            'rings_consumer_relation_changed: Peer not ready?')
+
+    @patch.object(swift_hooks, 'status_set')
+    @patch.object(swift_hooks, 'get_swift_hash')
+    @patch.object(swift_hooks, 'broadcast_rings_available')
+    @patch.object(swift_hooks, 'fetch_swift_rings_and_builders')
+    @patch.object(swift_hooks, 'relation_get')
+    def test_rings_consumer_changed_hash_miss(self, relation_get,
+                                              fetch_swift_rings_and_builders,
+                                              broadcast_rings_available,
+                                              get_swift_hash,
+                                              status_set):
+        rel_data = {
+            'rings_url': 'http://some-url:999',
+            'swift_hash': 'swhash'}
+        relation_get.side_effect = lambda x: rel_data.get(x)
+        get_swift_hash.return_value = 'mismatch'
+        with self.assertRaises(lib.swift_utils.SwiftProxyCharmException):
+            swift_hooks.rings_consumer_changed()
+        self.assertFalse(fetch_swift_rings_and_builders.called)
+        self.assertFalse(broadcast_rings_available.called)
+        status_set.assert_called_once_with(
+            'blocked',
+            'Swift hash has to be unique in multi-region setup')
+
+    @patch.object(swift_hooks, 'log')
+    @patch.object(swift_hooks, 'get_swift_hash')
+    @patch.object(swift_hooks, 'broadcast_rings_available')
+    @patch.object(swift_hooks, 'fetch_swift_rings_and_builders')
+    @patch.object(swift_hooks, 'relation_get')
+    def test_rings_consumer_changed_fetch_fail(self, relation_get,
+                                               fetch_swift_rings_and_builders,
+                                               broadcast_rings_available,
+                                               get_swift_hash,
+                                               log):
+        rel_data = {
+            'rings_url': 'http://some-url:999',
+            'swift_hash': 'swhash'}
+        relation_get.side_effect = lambda x: rel_data.get(x)
+        get_swift_hash.return_value = 'swhash'
+
+        def _fetch(url):
+            raise subprocess.CalledProcessError('cmd', 1)
+        fetch_swift_rings_and_builders.side_effect = _fetch
+        swift_hooks.rings_consumer_changed()
+        fetch_swift_rings_and_builders.assert_called_once_with(
+            'http://some-url:999')
+        log.assert_called_once_with(
+            ('Failed to sync rings from http://some-url:999 - no longer '
+             'available from that unit?'),
+            level='WARNING')
+        broadcast_rings_available.assert_called_once_with()
+
+    @patch.object(swift_hooks, 'is_leader')
+    @patch.object(lib.swift_utils, 'leader_set')
+    def test_rings_consumer_departed(self, leader_set, is_leader):
+        is_leader.return_value = True
+        swift_hooks.rings_consumer_departed()
+        leader_set.assert_called_once_with(
+            {'swift-proxy-rings-consumer': None})

@@ -385,3 +385,56 @@ options:
       .
       Ex. Setting this to 1000 would allow up to 1000 5GB object segments
       to be uploaded for a maximum large object size of 5TB.
+  enable-multi-region:
+    type: boolean
+    default: False
+    description: |
+      Enables Swift Global Cluster feature as described at
+      https://docs.openstack.org/swift/latest/overview_global_cluster.html
+      Should be used in conjunction with 'read-affinity', 'write-affinity' and
+      'write-affinity-node-count' options.
+  read-affinity:
+    type: string
+    default:
+    description: |
+      Which backend servers to prefer on reads. Format is r<N> for region N or
+      r<N>z<M> for region N, zone M. The value after the equals is the
+      priority; lower numbers are higher priority.
+      .
+      For example first read from region 1 zone 1, then region 1 zone 2, then
+      anything in region 2, then everything else - read_affinity = r1z1=100,
+      r1z2=200, r2=300
+      .
+      Default is empty, meaning no preference.
+      .
+      NOTE: use only when 'enable-multi-region=True'
+  write-affinity:
+    type: string
+    default:
+    description: |
+      This setting lets you trade data distribution for throughput. It makes
+      the proxy server prefer local back-end servers for object PUT requests
+      over non-local ones. Note that only object PUT requests are affected by
+      the write_affinity setting; POST, GET, HEAD, DELETE, OPTIONS, and
+      account/container PUT requests are not affected. The format is r<N> for
+      region N. If this is set, then when handling an object PUT request, some
+      number (see the write_affinity_node_count setting) of local backend
+      servers will be tried before any nonlocal ones.
+      .
+      For example try to write to regions 1 and 2 before writing to any other
+      nodes - write_affinity = r1, r2
+      .
+      NOTE: use only when 'enable-multi-region=True'
+  write-affinity-node-count:
+    type: string
+    default:
+    description: |
+      This setting is only useful in conjunction with write_affinity;
+      it governs how many local object servers will be tried before falling
+      back to non-local ones.
+      .
+      For example assuming 3 replicas and 'write-affinity: r1' then
+      'write-affinity-node-count: 2 * replicas' will make object PUTs try
+      storing the object’s replicas on up to 6 disks.
+      .
+      NOTE: use only when 'enable-multi-region=True'

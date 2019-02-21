@@ -33,6 +33,8 @@ provides:
     scope: container
   object-store:
     interface: swift-proxy
+  rings-distributor:
+    interface: swift-global-cluster
 requires:
   swift-storage:
     interface: swift
@@ -45,6 +47,8 @@ requires:
     interface: rabbitmq
   certificates:
     interface: tls-certificates
+  rings-consumer:
+    interface: swift-global-cluster
 peers:
   cluster:
     interface: swift-ha
