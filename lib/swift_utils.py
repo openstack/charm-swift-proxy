@@ -127,7 +127,10 @@ BASE_PACKAGES = [
 # > Folsom specific packages
 FOLSOM_PACKAGES = ['swift-plugin-s3', 'swauth']
 # > Mitaka specific packages
-MITAKA_PACKAGES = ['python-ceilometermiddleware']
+MITAKA_PACKAGES = [
+    'python-ceilometermiddleware',
+    'python-keystonemiddleware',
+]
 
 SWIFT_HA_RES = 'grp_swift_vips'
 TEMPLATES = 'templates/'
@@ -459,6 +462,7 @@ def determine_packages(release):
         pkgs += FOLSOM_PACKAGES
     if cmp_openstack >= 'mitaka':
         pkgs += MITAKA_PACKAGES
+        pkgs.remove('python-keystone')
     if cmp_openstack >= 'rocky':
         pkgs.remove('swift-plugin-s3')
     return pkgs

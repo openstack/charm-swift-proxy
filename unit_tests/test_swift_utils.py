@@ -579,10 +579,10 @@ class SwiftUtilsTestCase(unittest.TestCase):
              'swift-proxy',
              'memcached',
              'apache2',
-             'python-keystone',
              'swift-plugin-s3',
              'swauth',
-             'python-ceilometermiddleware'],
+             'python-ceilometermiddleware',
+             'python-keystonemiddleware'],
             swift_utils.determine_packages('mitaka')
         )
 
@@ -591,8 +591,8 @@ class SwiftUtilsTestCase(unittest.TestCase):
              'swift-proxy',
              'memcached',
              'apache2',
-             'python-keystone',
              'swauth',
-             'python-ceilometermiddleware'],
+             'python-ceilometermiddleware',
+             'python-keystonemiddleware'],
             swift_utils.determine_packages('rocky')
         )
