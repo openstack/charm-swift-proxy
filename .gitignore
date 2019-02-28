@@ -7,3 +7,4 @@ tags
 *.sw[nop]
 *.pyc
 func-results.json
+__pycache__
