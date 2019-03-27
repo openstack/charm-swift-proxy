@@ -83,3 +83,7 @@ set-weight:
     - ring
     - search-value
     - weight
+dispersion-populate:
+  description: Run swift-dispersion-populate command on the specified unit.
+dispersion-report:
+  description: Run swift-dispersion-report command on the specified unit.

@@ -672,3 +672,21 @@ class SwiftProxyBasicDeployment(OpenStackAmuletDeployment):
         assert u.wait_on_action(action_id), "diskusage action failed."
 
         u.log.info('OK')
+
+    def test_904_dispersion_populate_action(self):
+        """dispersion-populate action can be run"""
+        u.log.info("Testing dispersion-populate action")
+        action_id = u.run_action(self.swift_proxy_sentry,
+                                 "dispersion-populate")
+        assert u.wait_on_action(action_id), \
+            "dispersion-populate action failed."
+
+        u.log.info('OK')
+
+    def test_905_dispersion_report_action(self):
+        """dispersion-report action can be run"""
+        u.log.info("Testing dispersion-report action")
+        action_id = u.run_action(self.swift_proxy_sentry, "dispersion-report")
+        assert u.wait_on_action(action_id), "dispersion-report action failed."
+
+        u.log.info('OK')

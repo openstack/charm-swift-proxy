@@ -359,3 +359,62 @@ class SetWeightTestCase(CharmTestCase):
         self.action_fail.assert_called()
         self.set_weight_in_ring.assert_not_called()
         self.balance_rings.assert_not_called()
+
+
+class DispersionPopulateTestCase(CharmTestCase):
+
+    TEST_OUTPUT = (
+        b'Using storage policy: Policy-0 \n'
+        b'[KCreated 2 containers for dispersion reporting, 1s, 0 retries\n'
+        b'[KCreated 2 objects for dispersion reporting, 1s, 0 retries\n')
+
+    def setUp(self):
+        super(DispersionPopulateTestCase, self).setUp(
+            actions.actions, ['check_output', 'action_set', 'action_fail'])
+
+    def test_success(self):
+        self.check_output.return_value = self.TEST_OUTPUT
+        actions.actions.dispersion_populate([])
+        self.check_output.assert_called_once_with('swift-dispersion-populate')
+        self.action_set.assert_called_once_with({'output': self.TEST_OUTPUT})
+
+    def test_failure(self):
+        self.check_output.side_effect = actions.actions.CalledProcessError(
+            1, 'swift-dispersion-populate', output='Failure')
+        actions.actions.dispersion_populate([])
+        self.check_output.assert_called_once_with('swift-dispersion-populate')
+        self.action_set.assert_called_once_with({'output': 'Failure'})
+        self.action_fail.assert_called_once_with(
+            "Failed to run swift-dispersion-populate")
+
+
+class DispersionReportTestCase(CharmTestCase):
+
+    TEST_OUTPUT = (
+        b'Using storage policy: Policy-0 \n'
+        b'[KQueried 2 containers for dispersion reporting, 0s, 0 retries\n'
+        b'100.00% of container copies found (2 of2)\n'
+        b'Sample represents 0.78% of the container partition space\n'
+        b'[KQueried 2 objects for dispersion reporting, 0s, 0 retries\n'
+        b'! There were 2 partitions missing 0 copies.\n'
+        b'100.00% of object copies found (2 of 2)\n'
+        b'Sample represents 0.78% of the object partition space')
+
+    def setUp(self):
+        super(DispersionReportTestCase, self).setUp(
+            actions.actions, ['check_output', 'action_set', 'action_fail'])
+
+    def test_success(self):
+        self.check_output.return_value = self.TEST_OUTPUT
+        actions.actions.dispersion_report([])
+        self.check_output.assert_called_once_with('swift-dispersion-report')
+        self.action_set.assert_called_once_with({'output': self.TEST_OUTPUT})
+
+    def test_failure(self):
+        self.check_output.side_effect = actions.actions.CalledProcessError(
+            1, 'swift-dispersion-report', output='Failure')
+        actions.actions.dispersion_report([])
+        self.check_output.assert_called_once_with('swift-dispersion-report')
+        self.action_set.assert_called_once_with({'output': 'Failure'})
+        self.action_fail.assert_called_once_with(
+            "Failed to run swift-dispersion-report")

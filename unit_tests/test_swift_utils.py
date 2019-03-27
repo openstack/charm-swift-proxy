@@ -576,7 +576,8 @@ class SwiftUtilsTestCase(unittest.TestCase):
              'swift-proxy',
              'memcached',
              'apache2',
-             'python-keystone'],
+             'python-keystone',
+             'python-swiftclient'],
             swift_utils.determine_packages('essex')
         )
 
@@ -586,6 +587,7 @@ class SwiftUtilsTestCase(unittest.TestCase):
              'memcached',
              'apache2',
              'python-keystone',
+             'python-swiftclient',
              'swift-plugin-s3',
              'swauth'],
             swift_utils.determine_packages('folsom')
@@ -596,6 +598,7 @@ class SwiftUtilsTestCase(unittest.TestCase):
              'swift-proxy',
              'memcached',
              'apache2',
+             'python-swiftclient',
              'swift-plugin-s3',
              'swauth',
              'python-ceilometermiddleware',
@@ -608,6 +611,7 @@ class SwiftUtilsTestCase(unittest.TestCase):
              'swift-proxy',
              'memcached',
              'apache2',
+             'python-swiftclient',
              'swauth',
              'python-ceilometermiddleware',
              'python-keystonemiddleware'],

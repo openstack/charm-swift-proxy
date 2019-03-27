@@ -174,10 +174,42 @@ def set_weight(args):
     balance_rings()
 
 
+def dispersion_populate(args):
+    """Runs swift-dispersion-populate command and returns the output
+    @raises CalledProcessError
+    """
+    cmd = 'swift-dispersion-populate'
+    try:
+        output = check_output(cmd)
+        action_set({'output': output})
+    except CalledProcessError as e:
+        action_set({'output': e.output})
+        action_fail("Failed to run {}".format(cmd))
+
+
+def dispersion_report(args):
+    """Runs swift-dispersion-report command and returns the output
+    @raises CalledProcessError
+    """
+    cmd = 'swift-dispersion-report'
+    try:
+        output = check_output(cmd)
+        action_set({'output': output})
+    except CalledProcessError as e:
+        action_set({'output': e.output})
+        action_fail("Failed to run {}".format(cmd))
+
+
 # A dictionary of all the defined actions to callables (which take
 # parsed arguments).
-ACTIONS = {"pause": pause, "resume": resume, 'diskusage': diskusage,
-           'remove-devices': remove_devices, 'set-weight': set_weight}
+ACTIONS = {
+    "pause": pause,
+    "resume": resume,
+    'diskusage': diskusage,
+    'remove-devices': remove_devices,
+    'set-weight': set_weight,
+    "dispersion-populate": dispersion_populate,
+    "dispersion-report": dispersion_report}
 
 
 def main(argv):

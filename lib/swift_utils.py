@@ -82,6 +82,7 @@ from charmhelpers.core.decorators import (
 SWIFT_CONF_DIR = '/etc/swift'
 SWIFT_RING_EXT = 'ring.gz'
 SWIFT_CONF = os.path.join(SWIFT_CONF_DIR, 'swift.conf')
+SWIFT_DISPERSION_CONF = os.path.join(SWIFT_CONF_DIR, 'dispersion.conf')
 SWIFT_PROXY_CONF = os.path.join(SWIFT_CONF_DIR, 'proxy-server.conf')
 MEMCACHED_CONF = '/etc/memcached.conf'
 SWIFT_RINGS_CONF = '/etc/apache2/conf.d/swift-rings'
@@ -124,6 +125,7 @@ BASE_PACKAGES = [
     'memcached',
     'apache2',
     'python-keystone',
+    'python-swiftclient',
 ]
 # > Folsom specific packages
 FOLSOM_PACKAGES = ['swift-plugin-s3', 'swauth']
@@ -142,6 +144,10 @@ CONFIG_FILES = OrderedDict([
     (SWIFT_CONF, {
         'hook_contexts': [SwiftHashContext()],
         'services': ['swift-proxy'],
+    }),
+    (SWIFT_DISPERSION_CONF, {
+        'hook_contexts': [SwiftIdentityContext()],
+        'services': [],
     }),
     (SWIFT_PROXY_CONF, {
         'hook_contexts': [SwiftIdentityContext(),
@@ -397,6 +403,7 @@ def register_configs():
                                           openstack_release=release)
 
     confs = [SWIFT_CONF,
+             SWIFT_DISPERSION_CONF,
              SWIFT_PROXY_CONF,
              HAPROXY_CONF,
              MEMCACHED_CONF]
