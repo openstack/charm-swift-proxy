@@ -33,3 +33,28 @@ openstack-upgrade:
     set to True.
 diskusage:
   description: Run swift-recon -d on the specified unit.  Returns values in GB.
+remove-devices:
+  description: |
+    Removes the device(s) from the ring. This should normally just be used for
+    a device that has failed. For a device you wish to decommission, it's best
+    to set its weight to 0, wait for it to drain all its data, then use this
+    remove-from-ring action.
+  params:
+    ring:
+      type: string
+      description: |
+        Swift ring to remove the device(s) from. Valid options are 'account',
+        'container', 'object' or 'all'.
+    search-value:
+      type: string
+      description: |
+        The search-value can be of the form:
+        .
+        d<device_id>r<region>z<zone>-<ip>:<port>R<r_ip>:<r_port>/
+         <device_name>_<meta>
+        .
+        Where <r_ip> and <r_port> are replication ip and port. Any part is
+        optional, but you must include at least one part.
+  required:
+    - ring
+    - search-value

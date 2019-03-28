@@ -311,3 +311,27 @@ class DiskUsageTestCase(CharmTestCase):
         self.check_output.return_value = self.TEST_RECON_OUTPUT
         actions.actions.diskusage([])
         self.action_set.assert_called_once_with({'output': self.TEST_RESULT})
+
+
+class RemoveDevicesTestCase(CharmTestCase):
+
+    def setUp(self):
+        super(RemoveDevicesTestCase, self).setUp(
+            actions.actions, ["action_fail",
+                              "action_get",
+                              "remove_from_ring",
+                              "balance_rings"])
+
+    def test_ring_valid(self):
+        self.action_get.side_effect = ['account', 'd1']
+        actions.actions.remove_devices([])
+        self.remove_from_ring.assert_called_once_with(
+            '/etc/swift/account.builder', 'd1')
+        self.balance_rings.assert_called_once()
+
+    def test_ring_invalid(self):
+        self.action_get.side_effect = ['other', 'd1']
+        actions.actions.remove_devices([])
+        self.action_fail.assert_called()
+        self.remove_from_ring.assert_not_called()
+        self.balance_rings.assert_not_called()

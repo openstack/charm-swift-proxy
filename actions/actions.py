@@ -38,6 +38,7 @@ _add_path(_parent)
 from charmhelpers.core.host import service_pause, service_resume
 from charmhelpers.core.hookenv import (
     action_fail,
+    action_get,
     action_set,
 )
 from charmhelpers.contrib.openstack.utils import (
@@ -45,7 +46,13 @@ from charmhelpers.contrib.openstack.utils import (
     clear_unit_paused,
 )
 from hooks.swift_hooks import CONFIGS
-from lib.swift_utils import assess_status, services
+from lib.swift_utils import (
+    assess_status,
+    balance_rings,
+    remove_from_ring,
+    services,
+    SWIFT_CONF_DIR,
+)
 
 
 def get_action_parser(actions_yaml_path, action_name,
@@ -113,9 +120,37 @@ def diskusage(args):
         raise
 
 
+def remove_devices(args):
+    """ Removes the device(s) from the ring(s).
+
+    Removes the device(s) from the ring(s) based on the search pattern.
+
+    :raises SwiftProxyCharmException: if pattern action_get('search-value')
+        doesn't match any device in the ring.
+    """
+    rings_valid = ['account', 'container', 'object', 'all']
+    rings_to_update = []
+    ring = action_get('ring')
+    if ring not in rings_valid:
+        action_fail("Invalid ring name '{}'. Should be one of: {}".format(
+            ring, ', '.join(rings_valid)))
+        return
+    if ring == 'all':
+        rings_to_update.extend(['account', 'container', 'object'])
+    else:
+        rings_to_update.append(ring)
+    for ring_to_update in rings_to_update:
+        ring_to_update_builder = ring_to_update + '.builder'
+        ring_to_update_path = os.path.join(SWIFT_CONF_DIR,
+                                           ring_to_update_builder)
+        remove_from_ring(ring_to_update_path, action_get('search-value'))
+    balance_rings()
+
+
 # A dictionary of all the defined actions to callables (which take
 # parsed arguments).
-ACTIONS = {"pause": pause, "resume": resume, 'diskusage': diskusage}
+ACTIONS = {"pause": pause, "resume": resume, 'diskusage': diskusage,
+           'remove-devices': remove_devices}
 
 
 def main(argv):

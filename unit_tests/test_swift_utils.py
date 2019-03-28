@@ -429,6 +429,14 @@ class SwiftUtilsTestCase(unittest.TestCase):
             'weight': 100
         })
 
+    @mock.patch.object(subprocess, 'check_call')
+    def test_remove_from_ring(self, check_call):
+        swift_utils.remove_from_ring('/etc/swift/account.builder', 'd1')
+        check_call.assert_called_once_with(['swift-ring-builder',
+                                            '/etc/swift/account.builder',
+                                            'remove',
+                                            'd1'])
+
     @mock.patch('lib.swift_utils.config')
     @mock.patch('lib.swift_utils.set_os_workload_status')
     @mock.patch('lib.swift_utils.SwiftRingContext.__call__')
