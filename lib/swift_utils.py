@@ -22,6 +22,7 @@ from lib.swift_context import (
     SwiftRingContext,
     ApacheSSLContext,
     MemcachedContext,
+    SwiftS3Context,
 )
 
 import charmhelpers.contrib.openstack.context as context
@@ -144,6 +145,7 @@ CONFIG_FILES = OrderedDict([
     }),
     (SWIFT_PROXY_CONF, {
         'hook_contexts': [SwiftIdentityContext(),
+                          SwiftS3Context(),
                           context.BindHostContext(),
                           context.AMQPContext(ssl_dir=SWIFT_CONF_DIR)],
         'services': ['swift-proxy'],

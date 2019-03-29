@@ -151,3 +151,24 @@ class SwiftContextTestCase(unittest.TestCase):
             self.assertEqual(hash_, fd.read())
 
         self.assertTrue(mock_config.called)
+
+
+class SwiftS3ContextTestCase(unittest.TestCase):
+
+    @mock.patch('lib.swift_context.os_release')
+    @mock.patch('lib.swift_context.config')
+    def test_location(self, mock_config, mock_os_release):
+        cfg = {'region': 'London'}
+
+        def fake_config(key):
+            return cfg.get(key)
+
+        mock_config.side_effect = fake_config
+
+        mock_os_release.return_value = 'queens'
+        ctxt = swift_context.SwiftS3Context()
+        self.assertEqual({'location': 'London'}, ctxt())
+
+        mock_os_release.return_value = 'pike'
+        ctxt = swift_context.SwiftS3Context()
+        self.assertEqual({}, ctxt())
