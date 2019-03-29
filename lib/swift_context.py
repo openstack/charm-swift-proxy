@@ -10,6 +10,7 @@ from charmhelpers.core.hookenv import (
     unit_get,
     service_name,
     leader_get,
+    DEBUG,
 )
 from charmhelpers.contrib.openstack.context import (
     OSContextGenerator,
@@ -24,7 +25,11 @@ from charmhelpers.contrib.network.ip import (
     format_ipv6_addr,
     get_ipv6_addr,
 )
-from charmhelpers.contrib.openstack.utils import get_host_ip
+from charmhelpers.contrib.openstack.utils import (
+    os_release,
+    CompareOpenStackReleases,
+    get_host_ip,
+)
 
 
 SWIFT_HASH_FILE = '/var/lib/juju/swift-hash-path.conf'
@@ -79,6 +84,20 @@ class SwiftRingContext(OSContextGenerator):
             'www_dir': WWW_DIR,
             'allowed_hosts': allowed_hosts
         }
+        return ctxt
+
+
+class SwiftS3Context(OSContextGenerator):
+
+    def __call__(self):
+        ctxt = {}
+        if CompareOpenStackReleases(os_release('swift-common')) >= 'queens':
+            if config('region'):
+                ctxt['location'] = config('region')
+            else:
+                log("Region config not provided so location cannot be set - "
+                    "required from S3 Sig V4 support to work correctly", DEBUG)
+
         return ctxt
 
 
