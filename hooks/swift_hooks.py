@@ -65,6 +65,7 @@ from lib.swift_utils import (
     assess_status,
     try_initialize_swauth,
     clear_storage_rings_available,
+    determine_replicas,
 )
 
 import charmhelpers.contrib.openstack.utils as openstack
@@ -161,11 +162,11 @@ def config_changed():
     if is_elected_leader(SWIFT_HA_RES):
         log("Leader established, generating ring builders", level=INFO)
         # initialize new storage rings.
-        for path in SWIFT_RINGS.values():
+        for ring, path in SWIFT_RINGS.items():
             if not os.path.exists(path):
                 initialize_ring(path,
                                 config('partition-power'),
-                                config('replicas'),
+                                determine_replicas(ring),
                                 config('min-hours'))
 
     if config('prefer-ipv6'):

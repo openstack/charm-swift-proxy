@@ -1199,7 +1199,12 @@ def customer_check_assess_status(configs):
 
     # Verify allowed_hosts is populated with enough unit IP addresses
     ctxt = SwiftRingContext()()
-    if len(ctxt['allowed_hosts']) < config('replicas'):
+    replicas = [config('replicas'),
+                config('replicas-account'),
+                config('replicas-container')]
+    # Remove 'None' object types from the list
+    replicas = [r for r in replicas if r is not None]
+    if len(ctxt['allowed_hosts']) < max(replicas):
         return ('blocked', 'Not enough related storage nodes')
 
     # Verify there are enough storage zones to satisfy minimum replicas
@@ -1273,3 +1278,27 @@ def assess_status_func(configs, check_services=None):
         configs, required_interfaces,
         charm_func=customer_check_assess_status,
         services=check_services, ports=None)
+
+
+def determine_replicas(ring):
+    """ Determine replicas (lp1823696)
+
+    Determine replicas based on 'replicas', 'replicas-account' and
+    'replicas-container' options.
+
+    :param ring: ring name
+    :type ring: str
+    :returns: replicas for the ring
+    """
+    if ring == 'account':
+        if config('replicas-account'):
+            return config('replicas-account')
+        else:
+            return config('replicas')
+    elif ring == 'container':
+        if config('replicas-container'):
+            return config('replicas-container')
+        else:
+            return config('replicas')
+    else:
+        return config('replicas')

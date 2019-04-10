@@ -102,7 +102,21 @@ options:
   replicas:
     type: int
     default: 3
-    description: Minimum replicas for each object stored in the cluster.
+    description: Minimum replicas for each item stored in the cluster.
+  replicas-account:
+    type: int
+    default:
+    description: |
+      Minimum replicas for each account stored in the cluster.
+      .
+      NOTE: use only when you want to overwrite the global 'replicas' option.
+  replicas-container:
+    type: int
+    default:
+    description: |
+      Minimum replicas for each container stored in the cluster.
+      .
+      NOTE: use only when you want to overwrite the global 'replicas' option.
   min-hours:
     type: int
     default: 0

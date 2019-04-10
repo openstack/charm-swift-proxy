@@ -437,7 +437,7 @@ class SwiftUtilsTestCase(unittest.TestCase):
     def customer_check_assess_status(
             self, relation_ids, has_min_zones,
             ctxt, workload_status, config):
-        config.return_value = 3
+        config.side_effect = [3, 3, 3]
 
         relation_ids.return_value = []
         s, m = swift_utils.customer_check_assess_status(None)
@@ -596,3 +596,48 @@ class SwiftUtilsTestCase(unittest.TestCase):
              'python-keystonemiddleware'],
             swift_utils.determine_packages('rocky')
         )
+
+    @mock.patch('lib.swift_utils.config')
+    def test_determine_replicas_account_set(self, config):
+        config.side_effect = lambda key: {
+            'replicas': 3,
+            'replicas-account': 2,
+            'replicas-container': None}[key]
+        replicas = swift_utils.determine_replicas('account')
+        self.assertEqual(replicas, 2)
+
+    @mock.patch('lib.swift_utils.config')
+    def test_determine_replicas_account_not_set(self, config):
+        config.side_effect = lambda key: {
+            'replicas': 3,
+            'replicas-account': None,
+            'replicas-container': None}[key]
+        replicas = swift_utils.determine_replicas('account')
+        self.assertEqual(replicas, 3)
+
+    @mock.patch('lib.swift_utils.config')
+    def test_determine_replicas_container_set(self, config):
+        config.side_effect = lambda key: {
+            'replicas': 3,
+            'replicas-account': None,
+            'replicas-container': 2}[key]
+        replicas = swift_utils.determine_replicas('container')
+        self.assertEqual(replicas, 2)
+
+    @mock.patch('lib.swift_utils.config')
+    def test_determine_replicas_container_not_set(self, config):
+        config.side_effect = lambda key: {
+            'replicas': 3,
+            'replicas-account': None,
+            'replicas-container': None}[key]
+        replicas = swift_utils.determine_replicas('container')
+        self.assertEqual(replicas, 3)
+
+    @mock.patch('lib.swift_utils.config')
+    def test_determine_replicas_object(self, config):
+        config.side_effect = lambda key: {
+            'replicas': 3,
+            'replicas-account': 2,
+            'replicas-container': 2}[key]
+        replicas = swift_utils.determine_replicas('object')
+        self.assertEqual(replicas, 3)
