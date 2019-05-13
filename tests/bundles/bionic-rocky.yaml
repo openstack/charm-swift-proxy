@@ -1,0 +1,51 @@
+series: bionic
+applications:
+  swift-proxy:
+    charm: swift-proxy
+    series: bionic
+    num_units: 1
+    options:
+      zone-assignment: manual
+      replicas: 1
+      swift-hash: fdfef9d4-8b06-11e2-8ac0-531c923c8fae
+      openstack-origin: cloud:bionic-rocky
+  percona-cluster:
+    charm: cs:~openstack-charmers-next/percona-cluster
+    num_units: 1
+    options:
+      dataset-size: 25%
+      max-connections: 1000
+      source: cloud:bionic-rocky
+  keystone:
+    expose: True
+    charm: cs:~openstack-charmers-next/keystone
+    num_units: 1
+    options:
+      openstack-origin: cloud:bionic-rocky
+  glance:
+    expose: True
+    charm: cs:~openstack-charmers-next/glance
+    num_units: 1
+    options:
+      openstack-origin: cloud:bionic-rocky
+  swift-storage:
+    charm: cs:~openstack-charmers-next/swift-storage
+    num_units: 1
+    storage:
+      block-devices: 'cinder,10G'
+    options:
+      openstack-origin: cloud:bionic-rocky
+      zone: 1
+relations:
+- - keystone:shared-db
+  - percona-cluster:shared-db
+- - glance:shared-db
+  - percona-cluster:shared-db
+- - glance:identity-service
+  - keystone:identity-service
+- - swift-proxy:identity-service
+  - keystone:identity-service
+- - swift-storage:swift-storage
+  - swift-proxy:swift-storage
+- - glance:object-store
+  - swift-proxy:object-store
