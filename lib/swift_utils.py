@@ -504,6 +504,26 @@ def add_to_ring(ring_path, node):
     log(msg, level=INFO)
 
 
+def remove_from_ring(ring_path, search_value):
+    """ Removes the device(s) from the ring.
+
+    Removes the device(s) from the ring based on the search pattern.
+
+    :param ring_path: path to the ring
+    :type ring_path: str
+    :param search_value: search pattern
+    :type search_value: str
+    :raises: SwiftProxyCharmException
+    """
+    cmd = ['swift-ring-builder', ring_path, 'remove', search_value]
+    try:
+        subprocess.check_call(cmd)
+    except subprocess.CalledProcessError as e:
+        raise SwiftProxyCharmException(
+            "Failed to remove device(s) for {} pattern on {}. Output: "
+            "{}".format(search_value, ring_path, e))
+
+
 def _ring_port(ring_path, node):
     """Determine correct port from relation settings for a given ring file."""
     for name in ['account', 'object', 'container']:
