@@ -12,9 +12,9 @@ devices are added to the cluster and distributing those files to other nodes in
 the cluster.
 
 Since over time the leader may change, rings syncs use acknowledgements from
-peer units to determine whether a synchronisation has completed. This was if
-the leader switches to another unit, we are able to know that that unit has
-up-to-date ring and builder files.
+peer units to determine whether a synchronisation has completed. This way if
+the leader switches to another unit, we are able to know that the new leader
+has up-to-date ring and builder files.
 
 When new devices are added to storage units, the leader proxy unit is notified
 and adds them to the ring. Once complete, the leader unit will broadcast a
