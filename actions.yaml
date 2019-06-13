@@ -58,3 +58,28 @@ remove-devices:
   required:
     - ring
     - search-value
+set-weight:
+  description: Sets the device's weight.
+  params:
+    ring:
+      type: string
+      description: |
+        Swift ring to set the weight for. Valid options are 'account',
+        'container', 'object' or 'all'.
+    search-value:
+      type: string
+      description: |
+        The search-value can be of the form:
+        .
+        d<device_id>r<region>z<zone>-<ip>:<port>R<r_ip>:<r_port>/
+         <device_name>_<meta>
+        .
+        Where <r_ip> and <r_port> are replication ip and port. Any part is
+        optional, but you must include at least one part.
+    weight:
+      type: number
+      description: The device's weight
+  required:
+    - ring
+    - search-value
+    - weight

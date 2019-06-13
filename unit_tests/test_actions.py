@@ -335,3 +335,27 @@ class RemoveDevicesTestCase(CharmTestCase):
         self.action_fail.assert_called()
         self.remove_from_ring.assert_not_called()
         self.balance_rings.assert_not_called()
+
+
+class SetWeightTestCase(CharmTestCase):
+
+    def setUp(self):
+        super(SetWeightTestCase, self).setUp(
+            actions.actions, ["action_fail",
+                              "action_get",
+                              "set_weight_in_ring",
+                              "balance_rings"])
+
+    def test_ring_valid(self):
+        self.action_get.side_effect = ['account', 'd1', '0.0']
+        actions.actions.set_weight([])
+        self.set_weight_in_ring.assert_called_once_with(
+            '/etc/swift/account.builder', 'd1', '0.0')
+        self.balance_rings.assert_called_once()
+
+    def test_ring_invalid(self):
+        self.action_get.side_effect = ['other', 'd1', '0.0']
+        actions.actions.set_weight([])
+        self.action_fail.assert_called()
+        self.set_weight_in_ring.assert_not_called()
+        self.balance_rings.assert_not_called()

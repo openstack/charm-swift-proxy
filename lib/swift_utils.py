@@ -524,6 +524,29 @@ def remove_from_ring(ring_path, search_value):
             "{}".format(search_value, ring_path, e))
 
 
+def set_weight_in_ring(ring_path, search_value, weight):
+    """ Resets the device's weight.
+
+    Resets the device's weight based on the search pattern.
+
+    :param ring_path: path to the ring
+    :type ring_path: str
+    :param search_value: search pattern
+    :type search_value: str
+    :param weight: the device's weight
+    :type weight: str
+    :raises: SwiftProxyCharmException
+    """
+    cmd = ['swift-ring-builder', ring_path, 'set_weight', search_value, weight]
+    try:
+        subprocess.check_call(cmd)
+    except subprocess.CalledProcessError:
+        raise SwiftProxyCharmException(
+            "Failed to set {} weight for {} pattern on {}".format(weight,
+                                                                  search_value,
+                                                                  ring_path))
+
+
 def _ring_port(ring_path, node):
     """Determine correct port from relation settings for a given ring file."""
     for name in ['account', 'object', 'container']:

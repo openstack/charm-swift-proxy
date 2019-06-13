@@ -51,6 +51,7 @@ from lib.swift_utils import (
     balance_rings,
     remove_from_ring,
     services,
+    set_weight_in_ring,
     SWIFT_CONF_DIR,
 )
 
@@ -147,10 +148,36 @@ def remove_devices(args):
     balance_rings()
 
 
+def set_weight(args):
+    """ Sets the device's weight.
+
+    Sets the device's weight based on the search pattern.
+
+    :raises SwiftProxyCharmException: if pattern action_get('search-value')
+        doesn't match any device in the ring.
+    """
+    rings_valid = ['account', 'container', 'object', 'all']
+    ring = action_get('ring')
+    if ring not in rings_valid:
+        action_fail('Invalid ring name.')
+        return
+    if ring == 'all':
+        rings_to_update = ['account', 'container', 'object']
+    else:
+        rings_to_update = [ring]
+    for ring_to_update in rings_to_update:
+        ring_to_update_builder = ring_to_update + '.builder'
+        ring_to_update_path = os.path.join(SWIFT_CONF_DIR,
+                                           ring_to_update_builder)
+        set_weight_in_ring(ring_to_update_path, action_get('search-value'),
+                           str(action_get('weight')))
+    balance_rings()
+
+
 # A dictionary of all the defined actions to callables (which take
 # parsed arguments).
 ACTIONS = {"pause": pause, "resume": resume, 'diskusage': diskusage,
-           'remove-devices': remove_devices}
+           'remove-devices': remove_devices, 'set-weight': set_weight}
 
 
 def main(argv):

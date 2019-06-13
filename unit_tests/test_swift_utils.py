@@ -437,6 +437,15 @@ class SwiftUtilsTestCase(unittest.TestCase):
                                             'remove',
                                             'd1'])
 
+    @mock.patch.object(subprocess, 'check_call')
+    def test_set_weight_in_ring(self, check_call):
+        swift_utils.set_weight_in_ring('/etc/swift/account.builder', 'd1', 0.0)
+        check_call.assert_called_once_with(['swift-ring-builder',
+                                            '/etc/swift/account.builder',
+                                            'set_weight',
+                                            'd1',
+                                            0.0])
+
     @mock.patch('lib.swift_utils.config')
     @mock.patch('lib.swift_utils.set_os_workload_status')
     @mock.patch('lib.swift_utils.SwiftRingContext.__call__')
