@@ -62,7 +62,7 @@ class SwiftProxyBasicDeployment(OpenStackAmuletDeployment):
            """
         this_service = {'name': 'swift-proxy'}
         other_services = [
-            {'name': 'percona-cluster'},
+            self.get_percona_service_entry(),
             {'name': 'keystone'},
             {'name': 'glance'},
             {'name': 'swift-storage',
