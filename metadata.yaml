@@ -20,7 +20,7 @@ tags:
 series:
   - xenial
   - bionic
-  - cosmic
+  - eoan
   - disco
   - trusty
 extra-bindings:
