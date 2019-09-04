@@ -35,6 +35,7 @@ from charmhelpers.contrib.openstack.utils import (
     make_assess_status_func,
     os_application_version_set,
     CompareOpenStackReleases,
+    reset_os_release,
 )
 from charmhelpers.contrib.hahelpers.cluster import (
     is_elected_leader,
@@ -57,12 +58,16 @@ from charmhelpers.core.hookenv import (
     is_leader,
     leader_set,
     leader_get,
+    status_set,
 )
 from charmhelpers.fetch import (
     apt_update,
     apt_upgrade,
     apt_install,
-    add_source
+    apt_purge,
+    apt_autoremove,
+    add_source,
+    filter_missing_packages,
 )
 from charmhelpers.core.host import (
     lsb_release,
@@ -133,6 +138,19 @@ FOLSOM_PACKAGES = ['swift-plugin-s3', 'swauth']
 MITAKA_PACKAGES = [
     'python-ceilometermiddleware',
     'python-keystonemiddleware',
+]
+PY3_PACKAGES = [
+    'python3-ceilometermiddleware',
+    'python3-keystonemiddleware',
+    'python3-six',
+    'python3-swift',
+    'python3-swiftclient',
+]
+PURGE_PACKAGES = [
+    'python-ceilometermiddleware',
+    'python-keystonemiddleware',
+    'python-swift',
+    'python-swiftclient',
 ]
 
 SWIFT_HA_RES = 'grp_swift_vips'
@@ -474,7 +492,37 @@ def determine_packages(release):
         pkgs.remove('python-keystone')
     if cmp_openstack >= 'rocky':
         pkgs.remove('swift-plugin-s3')
+    if cmp_openstack >= 'train':
+        pkgs = [p for p in pkgs if not p.startswith('python-')]
+        pkgs.extend(PY3_PACKAGES)
     return pkgs
+
+
+def determine_purge_packages():
+    '''
+    Determine list of packages that where previously installed which are no
+    longer needed.
+
+    :returns: list of package names
+    '''
+    cmp_openstack = CompareOpenStackReleases(os_release('swift'))
+    if cmp_openstack >= 'train':
+        return PURGE_PACKAGES
+    return []
+
+
+def remove_old_packages():
+    '''Purge any packages that need to be removed.
+
+    :returns: bool Whether packages were removed.
+    '''
+    installed_packages = filter_missing_packages(determine_purge_packages())
+    if installed_packages:
+        log('Removing apt packages')
+        status_set('maintenance', 'Removing apt packages')
+        apt_purge(installed_packages, fatal=True)
+        apt_autoremove(purge=True, fatal=True)
+    return bool(installed_packages)
 
 
 def initialize_ring(path, part_power, replicas, min_hours):
@@ -645,6 +693,10 @@ def do_openstack_upgrade(configs):
     ]
     apt_update()
     apt_upgrade(options=dpkg_opts, fatal=True, dist=True)
+    reset_os_release()
+    apt_install(packages=determine_packages(new_os_rel),
+                options=dpkg_opts, fatal=True)
+    remove_old_packages()
     configs.set_release(openstack_release=new_os_rel)
     configs.write_all()
 
@@ -1189,6 +1241,11 @@ def _proxy_manager_call(path, args, kwargs):
                    args=args,
                    kwargs=kwargs)
     serialized = json.dumps(package, **JSON_ENCODE_OPTIONS)
+    cmp_openstack = CompareOpenStackReleases(os_release('swift'))
+    if cmp_openstack >= 'train':
+        python = 'python3'
+    else:
+        python = 'python2'
     script = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                           '..',
                                           'swift_manager',
@@ -1198,14 +1255,14 @@ def _proxy_manager_call(path, args, kwargs):
         if sys.version_info < (3, 5):
             # remove this after trusty support is removed.  No subprocess.run
             # in Python 3.4
-            process = subprocess.Popen([script, serialized],
+            process = subprocess.Popen([python, script, serialized],
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
                                        env=env)
             out, err = process.communicate()
             result = json.loads(out.decode('UTF-8'))
         else:
-            completed = subprocess.run([script, serialized],
+            completed = subprocess.run([python, script, serialized],
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
                                        env=env)

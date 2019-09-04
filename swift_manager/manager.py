@@ -1,5 +1,3 @@
-#!/usr/bin/env python2
-#
 # Copyright 2016 Canonical Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# NOTE(tinwood): This file needs to remain Python2 as it uses keystoneclient
-# from the payload software to do it's work.
-
 from __future__ import print_function
 
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ModuleNotFoundError:
+    import _pickle as pickle
 import json
 import os
 import sys
@@ -259,7 +257,7 @@ if __name__ == '__main__':
         print(str(e), file=sys.stderr)
         import traceback
         print(traceback.format_exc(), file=sys.stderr)
-        result = {'error', str(e)}
+        result = {'error': str(e)}
     except Exception as e:
         print("{}: something went wrong: {}".format(__file__, str(e)),
               file=sys.stderr)

@@ -179,7 +179,7 @@ def config_changed():
 
     # Determine whether or not we should do an upgrade.
     if not config('action-managed-upgrade') and \
-            openstack.openstack_upgrade_available('python-swift'):
+            openstack.openstack_upgrade_available('swift'):
         do_openstack_upgrade(CONFIGS)
         status_set('maintenance', 'Running openstack upgrade')
 
