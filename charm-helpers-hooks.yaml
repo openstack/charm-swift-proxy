@@ -16,3 +16,4 @@ include:
     - contrib.python
     - contrib.charmsupport
     - contrib.hardening|inc=*
+    - contrib.openstack.policyd
