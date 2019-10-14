@@ -618,6 +618,32 @@ class SwiftUtilsTestCase(unittest.TestCase):
             swift_utils.determine_packages('rocky')
         )
 
+        self.assertEqual(
+            ['swift',
+             'swift-proxy',
+             'memcached',
+             'apache2',
+             'python-swiftclient',
+             'swauth',
+             'python-ceilometermiddleware',
+             'python-keystonemiddleware'],
+            swift_utils.determine_packages('stein')
+        )
+
+        self.assertEqual(
+            ['swift',
+             'swift-proxy',
+             'memcached',
+             'apache2',
+             'swauth',
+             'python3-ceilometermiddleware',
+             'python3-keystonemiddleware',
+             'python3-six',
+             'python3-swift',
+             'python3-swiftclient'],
+            swift_utils.determine_packages('train')
+        )
+
     @mock.patch('lib.swift_utils.config')
     def test_determine_replicas_account_set(self, config):
         config.side_effect = lambda key: {
