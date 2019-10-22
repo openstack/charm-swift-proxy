@@ -1,5 +1,6 @@
 charm_name: swift-proxy
 gate_bundles:
+  - bionic-train
   - bionic-stein
   - bionic-rocky
   - bionic-queens
@@ -10,7 +11,7 @@ gate_bundles:
   - trusty-mitaka
   - disco-stein
 smoke_bundles:
-  - bionic-queens
+  - bionic-train
 dev_bundles:
   - disco-stein
 tests:
