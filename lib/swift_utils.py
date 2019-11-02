@@ -94,6 +94,7 @@ MEMCACHED_CONF = '/etc/memcached.conf'
 SWIFT_RINGS_CONF = '/etc/apache2/conf.d/swift-rings'
 SWIFT_RINGS_24_CONF = '/etc/apache2/conf-available/swift-rings.conf'
 HAPROXY_CONF = '/etc/haproxy/haproxy.cfg'
+APACHE_PORTS_CONF = '/etc/apache2/ports.conf'
 APACHE_SITES_AVAILABLE = '/etc/apache2/sites-available'
 APACHE_SITE_CONF = os.path.join(APACHE_SITES_AVAILABLE,
                                 'openstack_https_frontend')
@@ -199,6 +200,10 @@ CONFIG_FILES = OrderedDict([
     (MEMCACHED_CONF, {
         'hook_contexts': [MemcachedContext()],
         'services': ['memcached'],
+    }),
+    (APACHE_PORTS_CONF, {
+        'contexts': [],
+        'services': ['apache2'],
     }),
 ])
 
