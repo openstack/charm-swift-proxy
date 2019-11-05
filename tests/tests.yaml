@@ -16,3 +16,4 @@ dev_bundles:
   - disco-stein
 tests:
   - zaza.openstack.charm_tests.swift.tests.SwiftImageCreateTest
+  - zaza.openstack.charm_tests.swift.tests.SwiftProxyTests
