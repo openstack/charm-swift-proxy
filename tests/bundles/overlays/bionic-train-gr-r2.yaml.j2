@@ -1,0 +1,31 @@
+applications:
+  swift-proxy-region2:
+    charm: {{ charm_location }}
+relations:
+- - swift-proxy-region2:identity-service
+  - keystone:identity-service
+- - swift-proxy-region2:swift-storage
+  - swift-storage-region1-zone1:swift-storage
+- - swift-proxy-region2:swift-storage
+  - swift-storage-region1-zone2:swift-storage
+- - swift-proxy-region2:swift-storage
+  - swift-storage-region1-zone3:swift-storage
+- - swift-storage-region2-zone1:swift-storage
+  - swift-proxy-region1:swift-storage
+- - swift-storage-region2-zone2:swift-storage
+  - swift-proxy-region1:swift-storage
+- - swift-storage-region2-zone3:swift-storage
+  - swift-proxy-region1:swift-storage
+- - swift-proxy-region2:rings-consumer
+  - swift-proxy-region1:rings-distributor
+saas:
+  keystone:
+    url: admin/{{ swift_gr_region1 }}.keystone-offer
+  swift-proxy-region1:
+    url: admin/{{ swift_gr_region1 }}.swift-proxy-region1-offer
+  swift-storage-region1-zone1:
+    url: admin/{{ swift_gr_region1 }}.swift-storage-region1-zone1-offer
+  swift-storage-region1-zone2:
+    url: admin/{{ swift_gr_region1 }}.swift-storage-region1-zone2-offer
+  swift-storage-region1-zone3:
+    url: admin/{{ swift_gr_region1 }}.swift-storage-region1-zone3-offer

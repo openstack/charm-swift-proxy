@@ -10,6 +10,9 @@ gate_bundles:
   - xenial-mitaka
   - trusty-mitaka
   - disco-stein
+  - bionic-train-gr:
+    - swift_gr_region1: bionic-train-gr-r1
+    - swift_gr_region2: bionic-train-gr-r2
 smoke_bundles:
   - bionic-train
 dev_bundles:
@@ -17,3 +20,5 @@ dev_bundles:
 tests:
   - zaza.openstack.charm_tests.swift.tests.SwiftImageCreateTest
   - zaza.openstack.charm_tests.swift.tests.SwiftProxyTests
+  - swift_gr_region1:
+    - zaza.openstack.charm_tests.swift.tests.SwiftGlobalReplicationTests
