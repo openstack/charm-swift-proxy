@@ -215,9 +215,11 @@ class AddUserTestCase(CharmTestCase):
                                "action_fail", "check_call",
                                "try_initialize_swauth", "config",
                                "determine_api_port", "leader_get"])
+        self.mock_os_release = self.patch('os_release')
 
     def test_success(self):
         """Ensure that the action_set is called on succees."""
+        self.mock_os_release.return_value = "queens"
         self.config.return_value = "swauth"
         self.action_get.return_value = "test"
         self.determine_api_port.return_value = 8070
@@ -232,6 +234,7 @@ class AddUserTestCase(CharmTestCase):
 
     def test_failure(self):
         """Ensure that action_fail is called on failure."""
+        self.mock_os_release.return_value = "queens"
         self.config.return_value = "swauth"
         self.action_get.return_value = "test"
         self.determine_api_port.return_value = 8070

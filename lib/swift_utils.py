@@ -354,6 +354,10 @@ class SwiftProxyClusterRPC(object):
 
 
 def try_initialize_swauth():
+    cmp_openstack = CompareOpenStackReleases(os_release('swift'))
+    if cmp_openstack >= 'train':
+        # swauth is no longer maintained as of openstack train
+        return None
     if is_leader() and config('auth-type') == 'swauth':
         if leader_get('swauth-init') is not True:
             try:
@@ -499,6 +503,8 @@ def determine_packages(release):
     if cmp_openstack >= 'train':
         pkgs = [p for p in pkgs if not p.startswith('python-')]
         pkgs.extend(PY3_PACKAGES)
+        # swauth is no longer maintained as of openstack train
+        pkgs.remove('swauth')
     return pkgs
 
 

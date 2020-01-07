@@ -25,6 +25,7 @@ with mock.patch('charmhelpers.core.hookenv.config'):
 
 class SwiftIdentityContextTest(unittest.TestCase):
 
+    @mock.patch('lib.swift_context.os_release')
     @mock.patch('lib.swift_context.leader_get')
     @mock.patch('lib.swift_context.relation_get')
     @mock.patch('lib.swift_context.related_units')
@@ -38,7 +39,7 @@ class SwiftIdentityContextTest(unittest.TestCase):
                             mock_unit_get, mock_determine_api_port,
                             mock_IdentityServiceContext, mock_relation_ids,
                             mock_related_units, mock_relation_get,
-                            mock_leader_get):
+                            mock_leader_get, mock_os_release):
         _relinfo = {
             'auth_protocol': 'http',
             'service_protocol': 'http',
@@ -56,9 +57,11 @@ class SwiftIdentityContextTest(unittest.TestCase):
         mock_relation_ids.return_value = ['rid1']
         mock_related_units.return_value = ['ksunit/0']
         mock_relation_get.side_effect = lambda x, y, z: _relinfo[x]
+        mock_os_release.return_value = 'queens'
         ctxt = swift_context.SwiftIdentityContext()
         self.assertEqual(ctxt()['api_version'], '2')
 
+    @mock.patch('lib.swift_context.os_release')
     @mock.patch('lib.swift_context.leader_get')
     @mock.patch('lib.swift_context.relation_get')
     @mock.patch('lib.swift_context.related_units')
@@ -72,7 +75,7 @@ class SwiftIdentityContextTest(unittest.TestCase):
                             mock_unit_get, mock_determine_api_port,
                             mock_IdentityServiceContext, mock_relation_ids,
                             mock_related_units, mock_relation_get,
-                            mock_leader_get):
+                            mock_leader_get, mock_os_release):
         _relinfo = {
             'auth_protocol': 'http',
             'service_protocol': 'http',
@@ -94,6 +97,7 @@ class SwiftIdentityContextTest(unittest.TestCase):
         mock_related_units.return_value = ['ksunit/0']
         mock_relation_get.side_effect = lambda x, y, z: _relinfo[x]
         mock_config.return_value = None
+        mock_os_release.return_value = 'queens'
         ctxt = swift_context.SwiftIdentityContext()
         self.assertEqual(ctxt()['api_version'], '3')
         self.assertEqual(ctxt()['admin_domain_id'], 'admin_dom_id')

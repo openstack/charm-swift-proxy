@@ -2,6 +2,7 @@ add-user:
   description: |
     Add a user to swauth.
     This adds a given user / pass to swauth. Auth-type must be set to swauth.
+    Note that swauth is not supported for OpenStack Train and later.
   params:
     account:
       type: string

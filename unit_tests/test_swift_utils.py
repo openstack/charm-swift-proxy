@@ -565,6 +565,7 @@ class SwiftUtilsTestCase(unittest.TestCase):
             charm_func=swift_utils.customer_check_assess_status,
             services='s1', ports=None)
 
+    @mock.patch.object(swift_utils, 'os_release')
     @mock.patch.object(swift_utils, 'leader_set')
     @mock.patch.object(swift_utils, 'determine_api_port')
     @mock.patch.object(swift_utils, 'is_leader')
@@ -572,7 +573,8 @@ class SwiftUtilsTestCase(unittest.TestCase):
     @mock.patch.object(swift_utils, 'leader_get')
     @mock.patch.object(subprocess, 'check_call')
     def test_config_and_leader_get(self, check_call, leader_get, config,
-                                   is_leader, determine_api_port, leader_set):
+                                   is_leader, determine_api_port, leader_set,
+                                   os_release):
         """Ensure that we config_get, and then leader_get."""
         config.side_effect = lambda key: {
             'auth-type': 'swauth',
@@ -581,6 +583,7 @@ class SwiftUtilsTestCase(unittest.TestCase):
         determine_api_port.return_value = 8080
         is_leader.return_value = True
         leader_get.return_value = "Test"
+        os_release.return_value = "queens"
         swift_utils.try_initialize_swauth()
         check_call.assert_called_with(['swauth-prep',
                                        '-A',
@@ -707,7 +710,6 @@ class SwiftUtilsTestCase(unittest.TestCase):
              'swift-proxy',
              'memcached',
              'apache2',
-             'swauth',
              'python3-ceilometermiddleware',
              'python3-keystonemiddleware',
              'python3-six',

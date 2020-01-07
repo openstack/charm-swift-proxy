@@ -145,9 +145,12 @@ class SwiftIdentityContext(OSContextGenerator):
             'write_affinity_node_count': get_write_affinity_node_count()
         }
 
-        admin_key = leader_get('swauth-admin-key')
-        if admin_key is not None:
-            ctxt['swauth_admin_key'] = admin_key
+        cmp_openstack = CompareOpenStackReleases(os_release('swift'))
+        if cmp_openstack < 'train':
+            # swauth is no longer supported for OpenStack Train and later
+            admin_key = leader_get('swauth-admin-key')
+            if admin_key is not None:
+                ctxt['swauth_admin_key'] = admin_key
 
         if config('debug'):
             ctxt['log_level'] = 'DEBUG'
