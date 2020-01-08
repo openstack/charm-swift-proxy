@@ -63,11 +63,13 @@ options:
   auth-type:
     type: string
     default: tempauth
-    description: Auth method to use, tempauth, swauth or keystone
+    description: Auth method to use, tempauth, swauth or keystone. Note
+      that swauth is not supported for OpenStack Train and later.
   swauth-admin-key:
     type: string
     default: 
     description: The secret key to use to authenticate as an swauth admin
+      Note that swauth is not supported for OpenStack Train and later.
   delay-auth-decision:
     type: boolean
     default: true

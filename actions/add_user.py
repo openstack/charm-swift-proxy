@@ -43,18 +43,29 @@ from charmhelpers.core.hookenv import (
     log,
 )
 
-from lib.swift_utils import (
-    try_initialize_swauth,
+from charmhelpers.contrib.openstack.utils import (
+    os_release,
+    CompareOpenStackReleases,
 )
 
 from charmhelpers.contrib.hahelpers.cluster import (
     determine_api_port,
 )
 
+from lib.swift_utils import (
+    try_initialize_swauth,
+)
+
 
 def add_user():
     """Add a swauth user to swift."""
     if config('auth-type') == 'swauth':
+        cmp_openstack = CompareOpenStackReleases(os_release('swift'))
+        if cmp_openstack >= 'train':
+            message = "swauth is not supported for OpenStack Train and later"
+            log(message)
+            action_fail(message)
+            return None
         try_initialize_swauth()
         account = action_get('account')
         username = action_get('username')
