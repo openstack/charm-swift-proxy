@@ -17,6 +17,9 @@ smoke_bundles:
   - bionic-train
 dev_bundles:
   - disco-stein
+configure:
+  - swift_gr_region1:
+    - zaza.openstack.charm_tests.swift.setup.wait_for_region2
 tests:
   - zaza.openstack.charm_tests.swift.tests.SwiftImageCreateTest
   - zaza.openstack.charm_tests.swift.tests.SwiftProxyTests
