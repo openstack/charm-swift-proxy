@@ -108,11 +108,18 @@ class ResumeTestCase(CharmTestCase):
     def setUp(self):
         super(ResumeTestCase, self).setUp(
             actions.actions, ["service_resume", "clear_unit_paused",
-                              "assess_status"])
+                              "assess_status",
+                              "get_managed_services_and_ports"])
 
         class FakeArgs(object):
             services = ['swift-proxy', 'haproxy', 'memcached', 'apache2']
         self.args = FakeArgs()
+
+        def fake_svcs_and_ports(services, ports):
+            services.remove('haproxy')
+            return services, ports
+
+        self.get_managed_services_and_ports.side_effect = fake_svcs_and_ports
 
     def test_resumes_services(self):
         """Resume action resumes all of the Swift services."""
@@ -125,14 +132,14 @@ class ResumeTestCase(CharmTestCase):
         self.service_resume.side_effect = fake_service_resume
         actions.actions.resume(self.args)
         self.assertEqual(
-            resume_calls, ['swift-proxy', 'haproxy', 'memcached', 'apache2'])
+            resume_calls, ['swift-proxy', 'memcached', 'apache2'])
 
     def test_bails_out_early_on_error(self):
         """Resume action fails early if there are errors starting a service."""
         resume_calls = []
 
         def maybe_kill(svc):
-            if svc == "haproxy":
+            if svc == "apache2":
                 return False
             else:
                 resume_calls.append(svc)
@@ -140,9 +147,9 @@ class ResumeTestCase(CharmTestCase):
 
         self.service_resume.side_effect = maybe_kill
         self.assertRaisesRegexp(
-            Exception, "haproxy didn't start cleanly.",
+            Exception, "apache2 didn't start cleanly.",
             actions.actions.resume, self.args)
-        self.assertEqual(resume_calls, ['swift-proxy'])
+        self.assertEqual(resume_calls, ['swift-proxy', 'memcached'])
 
     def test_resume_sets_value(self):
         """Resume action sets the unit-paused value to False."""

@@ -35,6 +35,9 @@ def _add_path(path):
 _add_path(_parent)
 
 
+from charmhelpers.contrib.hahelpers.cluster import (
+    get_managed_services_and_ports,
+)
 from charmhelpers.core.host import service_pause, service_resume
 from charmhelpers.core.hookenv import (
     action_fail,
@@ -90,7 +93,8 @@ def resume(args):
 
     @raises Exception if any services fail to start
     """
-    for service in args.services:
+    _services, _ = get_managed_services_and_ports(args.services, [])
+    for service in _services:
         started = service_resume(service)
         if not started:
             raise Exception("{} didn't start cleanly.".format(service))

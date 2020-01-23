@@ -41,6 +41,7 @@ from charmhelpers.contrib.hahelpers.cluster import (
     is_elected_leader,
     peer_units,
     determine_api_port,
+    get_managed_services_and_ports,
 )
 from charmhelpers.core.hookenv import (
     log,
@@ -1464,6 +1465,7 @@ def assess_status_func(configs, check_services=None):
     """
     if check_services is None:
         check_services = services()
+    check_services, _ = get_managed_services_and_ports(check_services, [])
     required_interfaces = {}
     if relation_ids('identity-service'):
         required_interfaces['identity'] = ['identity-service']

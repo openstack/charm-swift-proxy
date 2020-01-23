@@ -547,13 +547,16 @@ class SwiftUtilsTestCase(unittest.TestCase):
                 swift_utils.VERSION_PACKAGE
             )
 
+    @mock.patch.object(swift_utils, 'get_managed_services_and_ports')
     @mock.patch.object(swift_utils, 'relation_ids')
     @mock.patch.object(swift_utils, 'services')
     @mock.patch.object(swift_utils, 'make_assess_status_func')
     def test_assess_status_func(self,
                                 make_assess_status_func,
                                 services,
-                                relation_ids):
+                                relation_ids,
+                                get_managed_services_and_ports):
+        get_managed_services_and_ports.return_value = (['s1'], [])
         relation_ids.return_value = True
         services.return_value = 's1'
         required_interfaces = {'identity': ['identity-service']}
@@ -563,7 +566,7 @@ class SwiftUtilsTestCase(unittest.TestCase):
         make_assess_status_func.assert_called_once_with(
             'test-config', required_interfaces,
             charm_func=swift_utils.customer_check_assess_status,
-            services='s1', ports=None)
+            services=['s1'], ports=None)
 
     @mock.patch.object(swift_utils, 'os_release')
     @mock.patch.object(swift_utils, 'leader_set')
