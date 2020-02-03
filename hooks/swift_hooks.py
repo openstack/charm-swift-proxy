@@ -86,6 +86,7 @@ from charmhelpers.contrib.openstack.ha.utils import (
 from charmhelpers.contrib.hahelpers.cluster import (
     is_elected_leader,
     determine_api_port,
+    get_managed_services_and_ports,
 )
 
 from charmhelpers.core.hookenv import (
@@ -111,6 +112,7 @@ from charmhelpers.core.host import (
     service_restart,
     service_stop,
     service_start,
+    service_resume,
 )
 from charmhelpers.fetch import (
     apt_install,
@@ -781,8 +783,10 @@ def post_series_upgrade():
     log("Running complete series upgrade hook", "INFO")
     openstack.clear_unit_paused()
     openstack.clear_unit_upgrading()
+    _services, _ = get_managed_services_and_ports(services(), [])
     if not openstack.is_unit_paused_set():
-        for service in services():
+        for service in _services:
+            service_resume(service)
             started = service_start(service)
             if not started:
                 raise Exception("{} didn't start cleanly.".format(service))
