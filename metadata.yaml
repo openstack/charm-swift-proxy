@@ -21,7 +21,6 @@ series:
   - xenial
   - bionic
   - eoan
-  - disco
   - trusty
 extra-bindings:
   public:
