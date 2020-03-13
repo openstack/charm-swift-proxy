@@ -50,7 +50,6 @@ class SwiftIdentityContextTest(unittest.TestCase):
             'service_password': 'svcpasswd',
             'service_tenant': 'svctenant',
             'service_port': 'svcport',
-            'admin_token': 'token',
             'api_version': None,
         }
         mock_config.return_value = None
@@ -87,7 +86,6 @@ class SwiftIdentityContextTest(unittest.TestCase):
             'service_domain': 'service_domain',
             'service_tenant': 'svctenant',
             'service_port': 'svcport',
-            'admin_token': 'token',
             'api_version': '3',
             'admin_domain_id': 'admin_dom_id',
             'service_tenant_id': 'svc_tenant_id',

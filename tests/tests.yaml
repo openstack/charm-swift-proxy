@@ -1,10 +1,10 @@
 charm_name: swift-proxy
 gate_bundles:
-  - bionic-train
-  - bionic-stein
-  - bionic-rocky
-  - bionic-queens
-  - xenial-queens
+  - test-s3api: bionic-train
+  - test-s3api: bionic-stein
+  - test-s3api: bionic-rocky
+  - test-s3api: bionic-queens
+  - test-s3api: xenial-queens
   - xenial-pike
   - xenial-ocata
   - xenial-mitaka
@@ -20,5 +20,9 @@ configure:
 tests:
   - zaza.openstack.charm_tests.swift.tests.SwiftImageCreateTest
   - zaza.openstack.charm_tests.swift.tests.SwiftProxyTests
+  - test-s3api:
+    - zaza.openstack.charm_tests.swift.tests.SwiftImageCreateTest
+    - zaza.openstack.charm_tests.swift.tests.SwiftProxyTests
+    - zaza.openstack.charm_tests.swift.tests.S3APITest
   - swift_gr_region1:
     - zaza.openstack.charm_tests.swift.tests.SwiftGlobalReplicationTests

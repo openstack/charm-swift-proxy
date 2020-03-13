@@ -210,8 +210,6 @@ class SwiftIdentityContext(OSContextGenerator):
                                                    unit, relid),
                     'service_port': relation_get('service_port',
                                                  unit, relid),
-                    'admin_token': relation_get('admin_token',
-                                                unit, relid),
                     'api_version': relation_get('api_version',
                                                 unit, relid) or '2',
                 }
