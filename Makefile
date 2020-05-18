@@ -1,4 +1,4 @@
-PYTHON := /usr/bin/env python
+PYTHON := /usr/bin/env python3
 
 lint:
 	@tox -e pep8
