@@ -94,48 +94,15 @@ to the underlying message bus.
 
 ## High availability
 
-This charm supports high availability. There are two mutually exclusive
-HA/clustering strategies:
+When more than one unit is deployed with the [hacluster][hacluster-charm]
+application the charm will bring up an HA active/active cluster.
 
-* virtual IP(s)
-* DNS
+There are two mutually exclusive high availability options: using virtual IP(s)
+or DNS. In both cases the hacluster subordinate charm is used to provide the
+Corosync and Pacemaker backend HA functionality.
 
-In both cases, the hacluster subordinate charm is required. It provides the
-corosync backend HA functionality.
-
-### virtual IP(s)
-
-To use virtual IP(s) the clustered nodes and the VIP must be on the same
-subnet. That is, the VIP must be a valid IP on the subnet for one of the node's
-interfaces and each node has an interface in said subnet. The VIP becomes a
-highly-available API endpoint.
-
-At a minimum, the configuration option `vip` must be defined. The value can
-take on space-separated values if multiple networks are in use. Optionally,
-options `vip_iface` or `vip_cidr` may be specified.
-
-### DNS
-
-DNS high availability does not require the clustered nodes to be on the same
-subnet.
-
-It does require:
-
-* an environment with MAAS 2.0 and Juju 2.0 (as minimum versions)
-* clustered nodes with static or "reserved" IP addresses registered in MAAS
-* DNS hostnames that are pre-registered in MAAS
-
-At a minimum, the configuration option `dns-ha` must be set to 'true' and at
-least one of `os-admin-hostname`, `os-internal-hostname`, or
-`os-public-hostname` must be set.
-
-The charm will throw an exception in the following circumstances:
-
-* if neither `vip` nor `dns-ha` is set and the charm has a relation added to
-  hacluster
-* if both `vip` and `dns-ha` are set
-* if `dns-ha` is set and none of `os-admin-hostname`, `os-internal-hostname`,
-  or `os-public-hostname` are set
+See [OpenStack high availability][cdg-ha-apps] in the [OpenStack Charms
+Deployment Guide][cdg] for details.
 
 ## Network spaces
 
@@ -205,3 +172,5 @@ For general charm questions refer to the [OpenStack Charm Guide][cg].
 [cdg-app-swift]: https://docs.openstack.org/project-deploy-guide/charm-deployment-guide/latest/app-swift.html
 [swift-upstream]: https://docs.openstack.org/developer/swift
 [swift-storage-charm]: https://jaas.ai/swift-storage
+[hacluster-charm]: https://jaas.ai/hacluster
+[cdg-ha-apps]: https://docs.openstack.org/project-deploy-guide/charm-deployment-guide/latest/app-ha.html#ha-applications
