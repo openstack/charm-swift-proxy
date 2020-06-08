@@ -17,7 +17,7 @@ import sys
 
 import unittest
 
-from mock import patch, MagicMock
+from unittest.mock import patch, MagicMock
 
 os.environ['JUJU_UNIT_NAME'] = 'swift-proxy'
 

@@ -19,7 +19,7 @@ import uuid
 
 import unittest
 
-from mock import (
+from unittest.mock import (
     call,
     patch,
     MagicMock,
