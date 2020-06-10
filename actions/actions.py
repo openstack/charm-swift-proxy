@@ -44,6 +44,9 @@ from charmhelpers.core.hookenv import (
     action_get,
     action_set,
 )
+from charmhelpers.contrib.hahelpers.cluster import (
+    is_elected_leader,
+)
 from charmhelpers.contrib.openstack.utils import (
     set_unit_paused,
     clear_unit_paused,
@@ -56,6 +59,7 @@ from lib.swift_utils import (
     services,
     set_weight_in_ring,
     SWIFT_CONF_DIR,
+    SWIFT_HA_RES,
 )
 
 
@@ -133,6 +137,10 @@ def remove_devices(args):
     :raises SwiftProxyCharmException: if pattern action_get('search-value')
         doesn't match any device in the ring.
     """
+    if not is_elected_leader(SWIFT_HA_RES):
+        action_fail('Must run action on leader unit')
+        return
+
     rings_valid = ['account', 'container', 'object', 'all']
     rings_to_update = []
     ring = action_get('ring')
@@ -160,6 +168,10 @@ def set_weight(args):
     :raises SwiftProxyCharmException: if pattern action_get('search-value')
         doesn't match any device in the ring.
     """
+    if not is_elected_leader(SWIFT_HA_RES):
+        action_fail('Must run action on leader unit')
+        return
+
     rings_valid = ['account', 'container', 'object', 'all']
     ring = action_get('ring')
     if ring not in rings_valid:

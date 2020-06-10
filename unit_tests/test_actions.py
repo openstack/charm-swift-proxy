@@ -330,7 +330,14 @@ class RemoveDevicesTestCase(CharmTestCase):
             actions.actions, ["action_fail",
                               "action_get",
                               "remove_from_ring",
-                              "balance_rings"])
+                              "balance_rings",
+                              "is_elected_leader"])
+        self.is_elected_leader.return_value = True
+
+    def test_not_leader(self):
+        self.is_elected_leader.return_value = False
+        actions.actions.remove_devices([])
+        self.action_fail.assert_called()
 
     def test_ring_valid(self):
         self.action_get.side_effect = ['account', 'd1']
@@ -354,7 +361,14 @@ class SetWeightTestCase(CharmTestCase):
             actions.actions, ["action_fail",
                               "action_get",
                               "set_weight_in_ring",
-                              "balance_rings"])
+                              "balance_rings",
+                              "is_elected_leader"])
+        self.is_elected_leader.return_value = True
+
+    def test_not_leader(self):
+        self.is_elected_leader.return_value = False
+        actions.actions.set_weight([])
+        self.action_fail.assert_called()
 
     def test_ring_valid(self):
         self.action_get.side_effect = ['account', 'd1', '0.0']
