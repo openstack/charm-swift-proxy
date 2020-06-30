@@ -52,3 +52,8 @@ requires:
 peers:
   cluster:
     interface: swift-ha
+resources:
+  policyd-override:
+    type: file
+    filename: policyd-override.zip
+    description: The policy.d overrides file

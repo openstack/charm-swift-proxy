@@ -440,3 +440,11 @@ options:
       storing the object’s replicas on up to 6 disks.
       .
       NOTE: use only when 'enable-multi-region=True'
+  use-policyd-override:
+    type: boolean
+    default: False
+    description: |
+      If True then use the resource file named 'policyd-override' to install
+      override YAML files in the service's policy.d directory.  The resource
+      file should be a ZIP file containing at least one yaml file with a .yaml
+      or .yml extension.  If False then remove the overrides.
