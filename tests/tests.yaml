@@ -31,3 +31,5 @@ tests:
 tests_options:
   force_deploy:
     - focal-ussuri
+  policyd:
+    - service: swift

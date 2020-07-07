@@ -78,6 +78,7 @@ from lib.swift_utils import (
 from lib.swift_context import get_swift_hash
 
 import charmhelpers.contrib.openstack.utils as openstack
+import charmhelpers.contrib.openstack.policyd as policyd
 
 from charmhelpers.contrib.openstack.ha.utils import (
     generate_ha_relation_data,
@@ -167,6 +168,10 @@ def install():
     # configure a directory on webserver for distributing rings.
     ensure_www_dir_permissions(get_www_dir())
 
+    # call the policy overrides handler which will install any policy overrides
+    policyd.maybe_do_policyd_overrides(
+        openstack.os_release('swift-proxy'), 'swift')
+
 
 @hooks.hook('config-changed')
 @restart_on_change(restart_map())
@@ -221,6 +226,10 @@ def config_changed():
         ha_relation_joined(relation_id=r_id)
 
     try_initialize_swauth()
+
+    # call the policy overrides handler which will install any policy overrides
+    policyd.maybe_do_policyd_overrides(
+        openstack.os_release('swift-proxy'), 'swift')
 
 
 @hooks.hook('identity-service-relation-joined')
@@ -730,6 +739,9 @@ def upgrade_charm():
     if new_packages:
         apt_install(new_packages)
     update_rsync_acls()
+    # call the policy overrides handler which will install any policy overrides
+    policyd.maybe_do_policyd_overrides(
+        openstack.os_release('swift-proxy'), 'swift')
 
 
 @hooks.hook('update-status')
