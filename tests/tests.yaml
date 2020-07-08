@@ -16,6 +16,9 @@ gate_bundles:
     - swift_gr_region2: bionic-train-gr-r2
 smoke_bundles:
   - bionic-train
+dev_bundles:
+  - test-s3api: focal-victoria
+  - test-s3api: groovy-victoria
 configure:
   - swift_gr_region1:
     - zaza.openstack.charm_tests.swift.setup.wait_for_region2
@@ -30,6 +33,6 @@ tests:
     - zaza.openstack.charm_tests.swift.tests.SwiftGlobalReplicationTests
 tests_options:
   force_deploy:
-    - focal-ussuri
+    - groovy-victoria
   policyd:
     - service: swift
