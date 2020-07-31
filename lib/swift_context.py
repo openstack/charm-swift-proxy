@@ -187,42 +187,52 @@ class SwiftIdentityContext(OSContextGenerator):
             }
             ctxt.update(ks_auth)
 
-        for relid in relation_ids('identity-service'):
-            log('Using Keystone configuration from identity-service.')
-            for unit in related_units(relid):
-                ks_auth = {
-                    'auth_type': 'keystone',
-                    'auth_protocol': relation_get('auth_protocol',
-                                                  unit, relid) or 'http',
-                    'service_protocol': relation_get('service_protocol',
-                                                     unit, relid) or 'http',
-                    'keystone_host': relation_get('auth_host',
-                                                  unit, relid),
-                    'service_host': relation_get('service_host',
-                                                 unit, relid),
-                    'auth_port': relation_get('auth_port',
-                                              unit, relid),
-                    'service_user': relation_get('service_username',
-                                                 unit, relid),
-                    'service_password': relation_get('service_password',
-                                                     unit, relid),
-                    'service_tenant': relation_get('service_tenant',
-                                                   unit, relid),
-                    'service_port': relation_get('service_port',
-                                                 unit, relid),
-                    'api_version': relation_get('api_version',
-                                                unit, relid) or '2',
-                }
-                if ks_auth['api_version'] == '3':
-                    ks_auth['admin_domain_id'] = relation_get(
-                        'admin_domain_id', unit, relid)
-                    ks_auth['service_tenant_id'] = relation_get(
-                        'service_tenant_id', unit, relid)
-                    ks_auth['admin_domain_name'] = relation_get(
-                        'service_domain', unit, relid)
-                    ks_auth['admin_tenant_name'] = relation_get(
-                        'service_tenant', unit, relid)
-                ctxt.update(ks_auth)
+        # Sometime during the 20.08 development cycle, keystone changed from
+        # every unit setting relation data to just the leader.  This means that
+        # the charm needs to data from the first relation that actually has
+        # data, or almalgamate the data from all the relations. For this charm,
+        # it merges from the relation ids available like the charms.reactive
+        # system does.
+        _keys = (('auth_protocol', 'auth_protocol', 'http'),
+                 ('service_protocol', 'service_protocol', 'http'),
+                 ('keystone_host', 'auth_host', None),
+                 ('service_host', 'service_host', None),
+                 ('auth_port', 'auth_port', None),
+                 ('service_user', 'service_username', None),
+                 ('service_password', 'service_password', None),
+                 ('service_tenant', 'service_tenant', None),
+                 ('service_port', 'service_port', None),
+                 ('api_version', 'api_version', '2'))
+        _keysv3 = (('admin_domain_id', 'admin_domain_id'),
+                   ('service_tenant_id', 'service_tenant_id'),
+                   ('admin_domain_name', 'service_domain'),
+                   ('admin_tenant_name', 'service_tenant'))
+
+        kvs = {}
+        relids = relation_ids('identity-service')
+        # if we have relids at all, then set the auth_type to keystone
+        if relids:
+            kvs['auth_type'] = 'keystone'
+        # merge the data from the related units
+        for (key, source, default) in _keys:
+            for relid in relids:
+                for unit in related_units(relid):
+                    value = relation_get(source, unit, relid)
+                    if value is not None:
+                        kvs[key] = value
+                    else:
+                        kvs[key] = kvs.get(key, default)
+        # if the api is version 3, also merge the additional keys
+        if kvs.get('api_version', None) == '3':
+            for (key, source) in _keysv3:
+                for relid in relids:
+                    for unit in related_units(relid):
+                        value = relation_get(source, unit, relid)
+                        if value is not None:
+                            kvs[key] = value
+
+        # merge in the creds from the relation; which override the config
+        ctxt.update(kvs)
 
         if config('prefer-ipv6'):
             for key in ['keystone_host', 'service_host']:
