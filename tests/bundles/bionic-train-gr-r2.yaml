@@ -14,7 +14,7 @@ applications:
       write-affinity-node-count: '1'
       openstack-origin: cloud:bionic-train
   swift-storage-region2-zone1:
-    charm: cs:~openstack-charmers-next/swift-storage
+    charm: cs:~openstack-charmers/swift-storage
     num_units: 1
     options:
       storage-region: 2
@@ -22,7 +22,7 @@ applications:
       block-device: /etc/swift/storage.img|2G
       openstack-origin: cloud:bionic-train
   swift-storage-region2-zone2:
-    charm: cs:~openstack-charmers-next/swift-storage
+    charm: cs:~openstack-charmers/swift-storage
     num_units: 1
     options:
       storage-region: 2
@@ -30,7 +30,7 @@ applications:
       block-device: /etc/swift/storage.img|2G
       openstack-origin: cloud:bionic-train
   swift-storage-region2-zone3:
-    charm: cs:~openstack-charmers-next/swift-storage
+    charm: cs:~openstack-charmers/swift-storage
     num_units: 1
     options:
       storage-region: 2
