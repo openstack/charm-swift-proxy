@@ -1257,7 +1257,7 @@ def fully_synced():
             not_synced.append(ringfile)
 
     if not_synced:
-        log("Not yet synced: {}".format(', '.join(not_synced), level=INFO))
+        log("Not yet synced: {}".format(', '.join(not_synced)), level=INFO)
         return False
 
     return True
@@ -1549,6 +1549,7 @@ def set_role(role_name, has_role=True):
     else:
         # Unset the key to show it does not have the role.
         leader_set({role_name: None})
+
 
 is_ring_consumer = functools.partial(
     is_role,

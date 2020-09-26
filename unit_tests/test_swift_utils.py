@@ -785,6 +785,6 @@ class SwiftUtilsTestCase(unittest.TestCase):
                                     '/%s.%s' % (s, ext)])
                 wgets.append(_c)
             self.assertEqual(wgets, self.check_call.call_args_list)
-        except:
+        except Exception:
             shutil.rmtree(swift_utils.SWIFT_CONF_DIR)
         swift_utils.SWIFT_CONF_DIR = _SWIFT_CONF_DIR

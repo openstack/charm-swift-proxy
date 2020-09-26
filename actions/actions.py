@@ -125,7 +125,7 @@ def diskusage(args):
     except CalledProcessError as e:
         action_set({'output': e.output})
         action_fail('Failed to run swift-recon -d')
-    except:
+    except Exception:
         raise
 
 

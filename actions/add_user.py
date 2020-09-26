@@ -92,5 +92,6 @@ def add_user():
                 'add-user.message': message,
             })
 
+
 if __name__ == '__main__':
     add_user()

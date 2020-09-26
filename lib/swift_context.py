@@ -286,7 +286,7 @@ def get_read_affinity():
     """
     if config('read-affinity'):
         read_affinity = config('read-affinity')
-        pattern = re.compile("^r\d+z?(\d+)?=\d+(,\s?r\d+z?(\d+)?=\d+)*$")
+        pattern = re.compile(r"^r\d+z?(\d+)?=\d+(,\s?r\d+z?(\d+)?=\d+)*$")
         if not pattern.match(read_affinity):
             msg = "'read-affinity' config option is malformed"
             status_set('blocked', msg)
@@ -308,7 +308,7 @@ def get_write_affinity():
     """
     if config('write-affinity'):
         write_affinity = config('write-affinity')
-        pattern = re.compile("^r\d+(,\s?r\d+)*$")
+        pattern = re.compile(r"^r\d+(,\s?r\d+)*$")
         if not pattern.match(write_affinity):
             msg = "'write-affinity' config option is malformed"
             status_set('blocked', msg)
@@ -330,7 +330,7 @@ def get_write_affinity_node_count():
     """
     if config('write-affinity-node-count'):
         write_affinity_node_count = config('write-affinity-node-count')
-        pattern = re.compile("^\d+(\s\*\sreplicas)?$")
+        pattern = re.compile(r"^\d+(\s\*\sreplicas)?$")
         if not pattern.match(write_affinity_node_count):
             msg = "'write-affinity-node-count' config option is malformed"
             status_set('blocked', msg)
