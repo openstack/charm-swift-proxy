@@ -1,5 +1,6 @@
 charm_name: swift-proxy
 gate_bundles:
+  - test-s3api: groovy-victoria
   - test-s3api: focal-victoria
   - test-s3api: focal-ussuri
   - test-s3api: bionic-ussuri
@@ -17,8 +18,6 @@ gate_bundles:
     - swift_gr_region2: bionic-train-gr-r2
 smoke_bundles:
   - bionic-train
-dev_bundles:
-  - test-s3api: groovy-victoria
 configure:
   - swift_gr_region1:
     - zaza.openstack.charm_tests.swift.setup.wait_for_region2
