@@ -72,18 +72,21 @@ class SwiftUtilsTestCase(unittest.TestCase):
     @mock.patch('lib.swift_utils.is_elected_leader')
     @mock.patch('lib.swift_utils.get_min_part_hours')
     @mock.patch('lib.swift_utils.set_min_part_hours')
-    def test_update_rings(self, mock_set_min_hours,
-                          mock_get_min_hours,
-                          mock_is_elected_leader, mock_path_exists,
-                          mock_log, mock_balance_rings,
-                          mock_get_rings_checksum,
-                          mock_get_builders_checksum, mock_update_www_rings,
-                          mock_previously_synced):
+    @mock.patch('lib.swift_utils.write_rings')
+    @mock.patch('lib.swift_utils.nodes_have_rep_data')
+    def test_update_rings(self,
+                          mock_nodes_have_rep_data,
+                          mock_write_rings, mock_set_min_hours,
+                          mock_get_min_hours, mock_is_elected_leader,
+                          mock_path_exists, mock_log, mock_balance_rings,
+                          mock_get_rings_checksum, mock_get_builders_checksum,
+                          mock_update_www_rings, mock_previously_synced):
 
         # Make sure same is returned for both so that we don't try to sync
         mock_get_rings_checksum.return_value = None
         mock_get_builders_checksum.return_value = None
         mock_previously_synced.return_value = True
+        mock_nodes_have_rep_data.return_value = True
 
         # Test blocker 1
         mock_is_elected_leader.return_value = False
@@ -116,13 +119,20 @@ class SwiftUtilsTestCase(unittest.TestCase):
         self.assertTrue(mock_get_min_hours.called)
         self.assertTrue(mock_set_min_hours.called)
         self.assertTrue(mock_balance_rings.called)
+        mock_write_rings.assert_not_called()
 
     @mock.patch('lib.swift_utils.previously_synced')
     @mock.patch('lib.swift_utils.balance_rings')
     @mock.patch('lib.swift_utils.add_to_ring')
     @mock.patch('lib.swift_utils.exists_in_ring')
     @mock.patch('lib.swift_utils.is_elected_leader')
+    @mock.patch('lib.swift_utils.update_ring_node_ports')
+    @mock.patch('lib.swift_utils.write_rings')
+    @mock.patch('lib.swift_utils.nodes_have_rep_data')
     def test_update_rings_multiple_devs(self,
+                                        mock_nodes_have_rep_data,
+                                        mock_write_rings,
+                                        mock_update_ring_node_ports,
                                         mock_is_leader_elected,
                                         mock_exists_in_ring,
                                         mock_add_to_ring,
@@ -148,6 +158,7 @@ class SwiftUtilsTestCase(unittest.TestCase):
         mock_is_leader_elected.return_value = True
         mock_previously_synced.return_value = True
         mock_exists_in_ring.side_effect = lambda *args: False
+        mock_nodes_have_rep_data.return_value = True
 
         swift_utils.update_rings(nodes)
         calls = [mock.call(os.path.join(swift_utils.SWIFT_CONF_DIR,
@@ -207,6 +218,8 @@ class SwiftUtilsTestCase(unittest.TestCase):
         mock_exists_in_ring.assert_has_calls(calls)
         mock_balance_rings.assert_called_once_with()
         mock_add_to_ring.assert_called()
+        mock_update_ring_node_ports.assert_called()
+        mock_write_rings.assert_called()
 
         # try re-adding, assert add_to_ring was not called
         mock_add_to_ring.reset_mock()
@@ -282,6 +295,60 @@ class SwiftUtilsTestCase(unittest.TestCase):
                                             '/etc/swift/account.builder',
                                             'set_replicas',
                                             '3'])
+
+    @mock.patch('lib.swift_utils.is_elected_leader', lambda arg: True)
+    @mock.patch('lib.swift_utils.previously_synced')
+    @mock.patch.object(subprocess, 'check_output')
+    def test_write_rings(self, check_call, mock_previously_synced):
+        swift_utils.write_rings()
+        expected_calls = []
+        for path in swift_utils.SWIFT_RINGS.values():
+            expected_calls.append(mock.call(['swift-ring-builder',
+                                             path, 'write_ring']))
+        check_call.assert_has_calls(expected_calls, any_order=True)
+
+    @mock.patch('lib.swift_utils.is_elected_leader', lambda arg: True)
+    @mock.patch('lib.swift_utils.previously_synced')
+    @mock.patch.object(subprocess, 'check_output')
+    def test_write_rings_exception_pass(self, check_call,
+                                        mock_previously_synced):
+        my_execp = subprocess.CalledProcessError(
+            2, "swift-ring-builder", output='Unable to write empty ring.')
+        check_call.side_effect = (my_execp, my_execp, my_execp)
+        swift_utils.write_rings()
+
+    @mock.patch('lib.swift_utils.is_elected_leader', lambda arg: True)
+    @mock.patch('lib.swift_utils.previously_synced')
+    @mock.patch.object(subprocess, 'check_output')
+    def test_write_rings_exception_blocks(self, mock_check_call,
+                                          mock_previously_synced):
+        my_execp = subprocess.CalledProcessError(2, "swift-ring-builder",
+                                                 output='')
+        mock_check_call.side_effect = my_execp
+        self.assertRaises(swift_utils.SwiftProxyCharmException,
+                          swift_utils.write_rings)
+
+    def test_nodes_have_rep_data_true(self):
+        nodes = [{
+            'ip_rep': '0.0.0.0',
+            'ip_cls': '1.1.1.1',
+            'region': '',
+            'object_port_rep': 10,
+            'container_port_rep': 20,
+            'account_port_rep': 30}, {
+            'ip_rep': '2.2.2.2',
+            'ip_cls': '3.3.3.3',
+            'region': '',
+            'object_port_rep': 40,
+            'container_port_rep': 50,
+            'account_port_rep': 60}]
+
+        self.assertTrue(swift_utils.nodes_have_rep_data(nodes))
+
+    def test_nodes_have_rep_data_false(self):
+        nodes = [{'ip_cls': '1.1.1.1', 'region': ''}, {'ip_cls': '3.3.3.3', }]
+
+        self.assertFalse(swift_utils.nodes_have_rep_data(nodes))
 
     @mock.patch('lib.swift_utils.get_www_dir')
     def test_mark_www_rings_deleted(self, mock_get_www_dir):
