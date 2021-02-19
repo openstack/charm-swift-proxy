@@ -8,14 +8,15 @@ gate_bundles:
   - test-s3api: bionic-stein
   - test-s3api: bionic-rocky
   - test-s3api: bionic-queens
-  - test-s3api: xenial-queens
-  - xenial-pike
-  - xenial-ocata
   - xenial-mitaka
-  - trusty-mitaka
   - bionic-train-gr:
     - swift_gr_region1: bionic-train-gr-r1
     - swift_gr_region2: bionic-train-gr-r2
+dev_bundles:
+  - trusty-mitaka
+  - test-s3api: xenial-queens
+  - xenial-ocata
+  - xenial-pike
 smoke_bundles:
   - bionic-train
 configure:
