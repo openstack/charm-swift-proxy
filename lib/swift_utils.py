@@ -216,6 +216,21 @@ class SwiftProxyCharmException(Exception):
     pass
 
 
+def nodes_have_rep_data(nodes=None):
+    """ Checks if data received from remote nodes are compatible and have
+    replication data.
+
+    """
+    for node in nodes:
+        for field in ['object_port_rep', 'container_port_rep',
+                      'account_port_rep', 'ip_rep']:
+            try:
+                _ = node[field]
+            except KeyError:
+                return False
+    return True
+
+
 class SwiftProxyClusterRPC(object):
     """Provides cluster relation rpc dicts.
 
@@ -582,6 +597,39 @@ def add_to_ring(ring_path, node):
     log(msg, level=INFO)
 
 
+def update_ring_node_ports(ring_name, ring_path, node):
+    """ Updates ring port and replication for each device node
+
+     :param ring_name: account, container or object
+     :type ring_name: str
+     :param ring_path: path to the ring
+     :type ring_path: str
+     :param node: device node
+     :type node: dict
+     :raises: SwiftProxyCharmException
+     """
+
+    log("Updating ports and replication ports for {} ring.".format(ring_name),
+        level=INFO)
+
+    port_field_name = "{}_port".format(ring_name)
+    portrep_field_name = "{}_port_rep".format(ring_name)
+    cmd = ['swift-ring-builder', ring_path, 'set_info',
+           '--ip', node['ip'],
+           '--replication-ip', node['ip_rep'],
+           '--device', node['device'],
+           '--change-port', str(node[port_field_name]),
+           '--change-replication-port', str(node[portrep_field_name])]
+    try:
+        subprocess.check_call(cmd)
+    except subprocess.CalledProcessError as e:
+        raise SwiftProxyCharmException(
+            "Failed to update device (host={}, rep_host={}, "
+            "dev_name={}) on {} ring: {}".format(
+                node['ip'], node['ip_rep'], node['device'],
+                ring_name, e))
+
+
 def remove_from_ring(ring_path, search_value):
     """ Removes the device(s) from the ring.
 
@@ -907,7 +955,7 @@ def sync_builders_and_rings_if_changed(f):
     @functools.wraps(f)
     def _inner_sync_builders_and_rings_if_changed(*args, **kwargs):
         if not is_elected_leader(SWIFT_HA_RES):
-            log("Sync rings called by non-leader - skipping", level=WARNING)
+            log("Sync rings called by non-leader - skipping", level=INFO)
             return
 
         try:
@@ -959,10 +1007,13 @@ def update_rings(nodes=None, min_part_hours=None, replicas=None):
     Also update min_part_hours if provided.
     """
     if not is_elected_leader(SWIFT_HA_RES):
-        log("Update rings called by non-leader - skipping", level=WARNING)
+        log("Update rings called by non-leader - skipping", level=INFO)
         return
 
     balance_required = False
+    rep_enabled = False
+    if nodes is not None:
+        rep_enabled = nodes_have_rep_data(nodes)
 
     if min_part_hours is not None:
         # NOTE: no need to stop the proxy since we are not changing the rings,
@@ -970,11 +1021,11 @@ def update_rings(nodes=None, min_part_hours=None, replicas=None):
 
         # Only update if all exist
         if all(os.path.exists(p) for p in SWIFT_RINGS.values()):
-            for ring, path in SWIFT_RINGS.items():
+            for ring_path, path in SWIFT_RINGS.items():
                 current_min_part_hours = get_min_part_hours(path)
                 if min_part_hours != current_min_part_hours:
                     log("Setting ring {} min_part_hours to {}"
-                        .format(ring, min_part_hours), level=INFO)
+                        .format(ring_path, min_part_hours), level=INFO)
                     try:
                         set_min_part_hours(path, min_part_hours)
                     except SwiftProxyCharmException as exc:
@@ -985,19 +1036,28 @@ def update_rings(nodes=None, min_part_hours=None, replicas=None):
                     else:
                         balance_required = True
 
+    log("Updading rings: nodes={}".format(nodes), level=DEBUG)
     if nodes is not None:
         for node in nodes:
-            for ring in SWIFT_RINGS.values():
-                if not exists_in_ring(ring, node):
-                    add_to_ring(ring, node)
+            for ring_path, path in SWIFT_RINGS.items():
+                if not exists_in_ring(path, node):
+                    add_to_ring(path, node)
                     balance_required = True
+                if rep_enabled:
+                    update_ring_node_ports(ring_path, path, node)
 
     if replicas is not None:
-        for ring, path in SWIFT_RINGS.items():
+        for ring_path, path in SWIFT_RINGS.items():
             current_replicas = get_current_replicas(path)
             if replicas != current_replicas:
                 update_replicas(path, replicas)
                 balance_required = True
+
+    if rep_enabled:
+        # Updates the ring with the builder contents even if re-balance is not
+        # needed. That makes sure that ports and replication ports changes are
+        # written into the ring. See Bug #1903762.
+        write_rings()
 
     if balance_required:
         balance_rings()
@@ -1054,10 +1114,31 @@ def update_replicas(path, replicas):
 
 
 @sync_builders_and_rings_if_changed
+def write_rings():
+    """Write any change to builder files to the rings"""
+    if not is_elected_leader(SWIFT_HA_RES):
+        log("Balance rings called by non-leader - skipping", level=INFO)
+        return
+
+    log("Writing rings from builder files", level=INFO)
+    for path in SWIFT_RINGS.values():
+        cmd = ['swift-ring-builder', path, 'write_ring']
+        try:
+            subprocess.check_output(cmd)
+        except subprocess.CalledProcessError as e:
+            # During swift-proxy install the ring does not yet have any nodes.
+            if "Unable to write empty ring" in str(e.output):
+                pass
+            else:
+                raise SwiftProxyCharmException(
+                    "Failed to set write ring {}".format(path))
+
+
+@sync_builders_and_rings_if_changed
 def balance_rings():
     """Rebalance each ring and notify peers that new rings are available."""
     if not is_elected_leader(SWIFT_HA_RES):
-        log("Balance rings called by non-leader - skipping", level=WARNING)
+        log("Balance rings called by non-leader - skipping", level=INFO)
         return
 
     if not should_balance([r for r in SWIFT_RINGS.values()]):
@@ -1102,7 +1183,7 @@ def notify_peers_builders_available(broker_token, broker_timestamp,
     """
     if not is_elected_leader(SWIFT_HA_RES):
         log("Ring availability peer broadcast requested by non-leader - "
-            "skipping", level=WARNING)
+            "skipping", level=INFO)
         return
 
     if not broker_token:
@@ -1205,7 +1286,7 @@ def notify_storage_and_consumers_rings_available(broker_timestamp):
     """
     if not is_elected_leader(SWIFT_HA_RES):
         log("Ring availability storage-relation broadcast requested by "
-            "non-leader - skipping", level=WARNING)
+            "non-leader - skipping", level=INFO)
         return
 
     hostname = get_hostaddr()
