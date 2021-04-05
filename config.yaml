@@ -92,7 +92,7 @@ options:
   # Swift ring management config
   partition-power:
     type: int
-    default: 8
+    default: 16
     description: |
       This value needs to be set according to the parameters of the cluster
       being deployed. In order to achieve an optimal distribution of objects
