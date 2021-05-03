@@ -18,18 +18,18 @@ applications:
       source: cloud:trusty-mitaka
   keystone:
     expose: True
-    charm: cs:~openstack-charmers-next/keystone
+    charm: cs:~openstack-charmers/keystone
     num_units: 1
     options:
       openstack-origin: cloud:trusty-mitaka
   glance:
     expose: True
-    charm: cs:~openstack-charmers-next/glance
+    charm: cs:~openstack-charmers/glance
     num_units: 1
     options:
       openstack-origin: cloud:trusty-mitaka
   swift-storage:
-    charm: cs:~openstack-charmers-next/swift-storage
+    charm: cs:~openstack-charmers/swift-storage
     num_units: 1
     storage:
       block-devices: 'cinder,10G'
