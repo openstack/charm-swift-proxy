@@ -23,12 +23,6 @@ applications:
     charm: cs:~openstack-charmers-next/mysql-router
   glance-mysql-router:
     charm: cs:~openstack-charmers-next/mysql-router
-  cinder-mysql-router:
-    charm: cs:~openstack-charmers-next/mysql-router
-  nova-cloud-controller-mysql-router:
-    charm: cs:~openstack-charmers-next/mysql-router
-  placement-mysql-router:
-    charm: cs:~openstack-charmers-next/mysql-router
 
   mysql-innodb-cluster:
     charm: cs:~openstack-charmers-next/mysql-innodb-cluster
