@@ -309,8 +309,8 @@ options:
     description: |
       Base64 encoded SSL certificate to install and use for API ports.
       .
-         juju set swift-proxy ssl_cert="$(cat cert | base64)" \
-                              ssl_key="$(cat key | base64)"
+         juju config swift-proxy ssl_cert="$(cat cert | base64)" \
+                                 ssl_key="$(cat key | base64)"
       .
       Setting this value (and ssl_key) will enable reverse proxying, point
       Swifts's entry in the Keystone catalog to use https, and override
