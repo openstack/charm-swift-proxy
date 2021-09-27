@@ -1,0 +1,99 @@
+variables:
+  openstack-origin: &openstack-origin distro
+
+series: impish
+
+comment:
+- 'machines section to decide order of deployment. database sooner = faster'
+machines:
+  '0':
+    constraints: mem=3072M
+  '1':
+    constraints: mem=3072M
+  '2':
+    constraints: mem=3072M
+  '3':
+  '4':
+  '5':
+  '6':
+
+applications:
+
+  keystone-mysql-router:
+    charm: cs:~openstack-charmers-next/mysql-router
+  glance-mysql-router:
+    charm: cs:~openstack-charmers-next/mysql-router
+
+  mysql-innodb-cluster:
+    charm: cs:~openstack-charmers-next/mysql-innodb-cluster
+    num_units: 3
+    options:
+      source: *openstack-origin
+    to:
+      - '0'
+      - '1'
+      - '2'
+
+  keystone:
+    expose: True
+    charm: cs:~openstack-charmers-next/keystone
+    num_units: 1
+    options:
+      openstack-origin: *openstack-origin
+    to:
+      - '3'
+
+  swift-proxy:
+    charm: swift-proxy
+    num_units: 1
+    options:
+      zone-assignment: manual
+      replicas: 1
+      swift-hash: fdfef9d4-8b06-11e2-8ac0-531c923c8fae
+      openstack-origin: *openstack-origin
+    to:
+      - '4'
+
+  glance:
+    expose: True
+    charm: cs:~openstack-charmers-next/glance
+    num_units: 1
+    options:
+      openstack-origin: *openstack-origin
+    to:
+      - '5'
+
+  swift-storage:
+    charm: cs:~openstack-charmers-next/swift-storage
+    num_units: 1
+    storage:
+      block-devices: 'cinder,10G'
+    options:
+      zone: 1
+      openstack-origin: *openstack-origin
+    to:
+      - '6'
+
+relations:
+
+  - - 'keystone:shared-db'
+    - 'keystone-mysql-router:shared-db'
+  - - 'keystone-mysql-router:db-router'
+    - 'mysql-innodb-cluster:db-router'
+
+  - - 'glance:shared-db'
+    - 'glance-mysql-router:shared-db'
+  - - 'glance-mysql-router:db-router'
+    - 'mysql-innodb-cluster:db-router'
+
+  - - 'glance:identity-service'
+    - 'keystone:identity-service'
+
+  - - 'swift-proxy:identity-service'
+    - 'keystone:identity-service'
+
+  - - 'swift-storage:swift-storage'
+    - 'swift-proxy:swift-storage'
+
+  - - 'glance:object-store'
+    - 'swift-proxy:object-store'

@@ -3,17 +3,20 @@
       - charm-unit-jobs
     check:
       jobs:
-      - test-s3api-hirsute-wallaby
-      - test-s3api-groovy-victoria
-      - test-s3api-focal-wallaby
-      - test-s3api-focal-victoria
-      - test-s3api-focal-ussuri
-      - test-s3api-bionic-ussuri
-      - test-s3api-bionic-train
-      - test-s3api-bionic-stein
-      - test-s3api-bionic-queens
-      - xenial-mitaka_swift-proxy
-      - bionic-train-gr_swift-proxy
+        - test-s3api-impish-xena:
+            voting: false
+        - test-s3api-hirsute-wallaby
+        - test-s3api-focal-xena:
+            voting: false
+        - test-s3api-focal-wallaby
+        - test-s3api-focal-victoria
+        - test-s3api-focal-ussuri
+        - test-s3api-bionic-ussuri
+        - test-s3api-bionic-train
+        - test-s3api-bionic-stein
+        - test-s3api-bionic-queens
+        - xenial-mitaka_swift-proxy
+        - bionic-train-gr_swift-proxy
 
 - job:
     name: xenial-mitaka_swift-proxy
@@ -80,14 +83,20 @@
     vars:
       tox_extra_args: test-s3api:focal-wallaby
 - job:
-    name: test-s3api-groovy-victoria
+    name: test-s3api-focal-xena
     parent: func-target
     dependencies: *smoke-jobs
     vars:
-      tox_extra_args: test-s3api:groovy-victoria
+      tox_extra_args: test-s3api:focal-xena
 - job:
     name: test-s3api-hirsute-wallaby
     parent: func-target
     dependencies: *smoke-jobs
     vars:
       tox_extra_args: test-s3api:hirsute-wallaby
+- job:
+    name: test-s3api-impish-xena
+    parent: func-target
+    dependencies: *smoke-jobs
+    vars:
+      tox_extra_args: test-s3api:impish-xena
