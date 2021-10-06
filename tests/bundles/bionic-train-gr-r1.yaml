@@ -1,7 +1,8 @@
 series: bionic
+local_overlay_enabled: false
 applications:
   swift-proxy-region1:
-    charm: swift-proxy
+    charm: ../../.
     num_units: 1
     options:
       region: RegionOne
