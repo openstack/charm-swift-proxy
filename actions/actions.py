@@ -67,7 +67,7 @@ def get_action_parser(actions_yaml_path, action_name,
                       get_services=services):
     """Make an argparse.ArgumentParser seeded from actions.yaml definitions."""
     with open(actions_yaml_path) as fh:
-        doc = yaml.load(fh)[action_name]["description"]
+        doc = yaml.safe_load(fh)[action_name]["description"]
     parser = argparse.ArgumentParser(description=doc)
     parser.add_argument("--services", default=get_services())
     # TODO: Add arguments for params defined in the actions.yaml

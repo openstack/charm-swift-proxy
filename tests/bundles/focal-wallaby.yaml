@@ -20,12 +20,14 @@ machines:
 applications:
 
   keystone-mysql-router:
-    charm: cs:~openstack-charmers-next/mysql-router
+    charm: cs:~openstack-charmers/mysql-router
+    channel: candidate
   glance-mysql-router:
-    charm: cs:~openstack-charmers-next/mysql-router
+    charm: cs:~openstack-charmers/mysql-router
+    channel: candidate
 
   mysql-innodb-cluster:
-    charm: cs:~openstack-charmers-next/mysql-innodb-cluster
+    charm: cs:~openstack-charmers/mysql-innodb-cluster
     num_units: 3
     options:
       source: *openstack-origin
@@ -33,15 +35,17 @@ applications:
       - '0'
       - '1'
       - '2'
+    channel: candidate
 
   keystone:
     expose: True
-    charm: cs:~openstack-charmers-next/keystone
+    charm: cs:~openstack-charmers/keystone
     num_units: 1
     options:
       openstack-origin: *openstack-origin
     to:
       - '3'
+    channel: candidate
 
   swift-proxy:
     charm: swift-proxy
@@ -56,15 +60,16 @@ applications:
 
   glance:
     expose: True
-    charm: cs:~openstack-charmers-next/glance
+    charm: cs:~openstack-charmers/glance
     num_units: 1
     options:
       openstack-origin: *openstack-origin
     to:
       - '5'
+    channel: candidate
 
   swift-storage:
-    charm: cs:~openstack-charmers-next/swift-storage
+    charm: cs:~openstack-charmers/swift-storage
     num_units: 1
     storage:
       block-devices: 'cinder,10G'
@@ -73,6 +78,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '6'
+    channel: candidate
 
 relations:
 
