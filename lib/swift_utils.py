@@ -641,7 +641,7 @@ def remove_from_ring(ring_path, search_value):
     :type search_value: str
     :raises: SwiftProxyCharmException
     """
-    cmd = ['swift-ring-builder', ring_path, 'remove', search_value]
+    cmd = ['swift-ring-builder', ring_path, 'remove', search_value, '-y']
     try:
         subprocess.check_call(cmd)
     except subprocess.CalledProcessError as e:

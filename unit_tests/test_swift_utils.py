@@ -562,7 +562,8 @@ class SwiftUtilsTestCase(unittest.TestCase):
         check_call.assert_called_once_with(['swift-ring-builder',
                                             '/etc/swift/account.builder',
                                             'remove',
-                                            'd1'])
+                                            'd1',
+                                            '-y'])
 
     @mock.patch.object(subprocess, 'check_call')
     def test_set_weight_in_ring(self, check_call):

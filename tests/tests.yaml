@@ -40,6 +40,7 @@ tests:
     - zaza.openstack.charm_tests.swift.tests.S3APITest
   - swift_gr_region1:
     - zaza.openstack.charm_tests.swift.tests.SwiftGlobalReplicationTests
+    - zaza.openstack.charm_tests.swift.tests.SwiftProxyMultiZoneTests
 
 tests_options:
   force_deploy:
