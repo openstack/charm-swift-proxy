@@ -22,14 +22,12 @@ applications:
     num_units: 1
     options:
       openstack-origin: cloud:trusty-mitaka
-    channel: candidate
   glance:
     expose: True
     charm: cs:~openstack-charmers/glance
     num_units: 1
     options:
       openstack-origin: cloud:trusty-mitaka
-    channel: candidate
   swift-storage:
     charm: cs:~openstack-charmers/swift-storage
     num_units: 1
@@ -38,7 +36,6 @@ applications:
     options:
       openstack-origin: cloud:trusty-mitaka
       zone: 1
-    channel: candidate
 relations:
 - - keystone:shared-db
   - percona-cluster:shared-db

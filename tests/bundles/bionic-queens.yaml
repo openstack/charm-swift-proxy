@@ -14,17 +14,14 @@ applications:
     options:
       dataset-size: 25%
       max-connections: 1000
-    channel: candidate
   keystone:
     expose: True
     charm: cs:~openstack-charmers/keystone
     num_units: 1
-    channel: candidate
   glance:
     expose: True
     charm: cs:~openstack-charmers/glance
     num_units: 1
-    channel: candidate
   swift-storage:
     charm: cs:~openstack-charmers/swift-storage
     num_units: 1
@@ -32,7 +29,6 @@ applications:
       block-devices: 'cinder,10G'
     options:
       zone: 1
-    channel: candidate
 relations:
 - - keystone:shared-db
   - percona-cluster:shared-db

@@ -22,7 +22,6 @@ applications:
       zone: 1
       block-device: /etc/swift/storage.img|2G
       openstack-origin: cloud:bionic-train
-    channel: candidate
   swift-storage-region1-zone2:
     charm: cs:~openstack-charmers/swift-storage
     num_units: 1
@@ -31,7 +30,6 @@ applications:
       zone: 2
       block-device: /etc/swift/storage.img|2G
       openstack-origin: cloud:bionic-train
-    channel: candidate
   swift-storage-region1-zone3:
     charm: cs:~openstack-charmers/swift-storage
     num_units: 1
@@ -40,7 +38,6 @@ applications:
       zone: 3
       block-device: /etc/swift/storage.img|2G
       openstack-origin: cloud:bionic-train
-    channel: candidate
   percona-cluster:
     charm: cs:~openstack-charmers/percona-cluster
     num_units: 1
@@ -48,21 +45,18 @@ applications:
       dataset-size: 25%
       max-connections: 1000
       source: cloud:bionic-train
-    channel: candidate
   keystone:
     expose: True
     charm: cs:~openstack-charmers/keystone
     num_units: 1
     options:
       openstack-origin: cloud:bionic-train
-    channel: candidate
   glance:
     expose: True
     charm: cs:~openstack-charmers/glance
     num_units: 1
     options:
       openstack-origin: cloud:bionic-train
-    channel: candidate
 relations:
   - - swift-proxy-region1:swift-storage
     - swift-storage-region1-zone1:swift-storage

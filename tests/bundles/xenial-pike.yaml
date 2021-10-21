@@ -16,21 +16,18 @@ applications:
       dataset-size: 25%
       max-connections: 1000
       source: cloud:xenial-pike
-    channel: candidate
   keystone:
     expose: True
     charm: cs:~openstack-charmers/keystone
     num_units: 1
     options:
       openstack-origin: cloud:xenial-pike
-    channel: candidate
   glance:
     expose: True
     charm: cs:~openstack-charmers/glance
     num_units: 1
     options:
       openstack-origin: cloud:xenial-pike
-    channel: candidate
   swift-storage:
     charm: cs:~openstack-charmers/swift-storage
     num_units: 1
@@ -39,7 +36,6 @@ applications:
     options:
       openstack-origin: cloud:xenial-pike
       zone: 1
-    channel: candidate
 relations:
 - - keystone:shared-db
   - percona-cluster:shared-db
