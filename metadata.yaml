@@ -18,7 +18,6 @@ tags:
 - openstack
 - cache-proxy
 series:
-- xenial
 - bionic
 - focal
 - groovy
