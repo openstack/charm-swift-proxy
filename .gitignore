@@ -6,5 +6,6 @@ bin
 tags
 *.sw[nop]
 *.pyc
+*.charm
 func-results.json
 __pycache__

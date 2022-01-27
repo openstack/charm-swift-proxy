@@ -1,111 +1,49 @@
 - project:
     templates:
-      - charm-yoga-unit-jobs
+      - charm-unit-jobs-py38
+      - charm-unit-jobs-py39
     check:
       jobs:
-        - test-s3api-bionic-queens
-        - test-s3api-bionic-stein
-        - test-s3api-bionic-train
-        - test-s3api-bionic-ussuri
-        - focal-ussuri-gr_swift-proxy
-        - test-s3api-focal-ussuri
-        - test-s3api-focal-victoria
-        - test-s3api-focal-wallaby
         - test-s3api-focal-xena
         - test-s3api-focal-yoga:
             voting: false
-        - test-s3api-hirsute-wallaby
         - test-s3api-impish-xena:
             voting: false
         - test-s3api-jammy-yoga:
             voting: false
+    vars:
+      needs_charm_build: true
+      charm_build_name: swift-proxy
+      build_type: charmcraft
 
-- job:
-    name: test-s3api-bionic-queens
-    parent: func-target
-    dependencies: &smoke-jobs
-      - test-s3api-focal-ussuri
-    vars:
-      tox_extra_args: test-s3api:bionic-queens
-- job:
-    name: test-s3api-bionic-rocky
-    parent: func-target
-    dependencies: *smoke-jobs
-    vars:
-      tox_extra_args: test-s3api:bionic-rocky
-- job:
-    name: test-s3api-bionic-stein
-    parent: func-target
-    dependencies: *smoke-jobs
-    vars:
-      tox_extra_args: test-s3api:bionic-stein
-- job:
-    name: test-s3api-bionic-train
-    parent: func-target
-    dependencies: *smoke-jobs
-    vars:
-      tox_extra_args: test-s3api:bionic-train
-- job:
-    name: focal-ussuri-gr_swift-proxy
-    parent: func-target
-    dependencies: *smoke-jobs
-    vars:
-      tox_extra_args: swift_gr_region1:focal-ussuri-gr-r1 swift_gr_region2:focal-ussuri-gr-r2
-- job:
-    name: test-s3api-bionic-ussuri
-    parent: func-target
-    dependencies: *smoke-jobs
-    vars:
-      tox_extra_args: test-s3api:bionic-ussuri
-- job:
-    name: test-s3api-focal-ussuri
-    parent: func-target
-    dependencies:
-      - osci-lint
-      - tox-py36
-      - tox-py38
-      - tox-py39
-    vars:
-      tox_extra_args: test-s3api:focal-ussuri
-- job:
-    name: test-s3api-focal-victoria
-    parent: func-target
-    dependencies: *smoke-jobs
-    vars:
-      tox_extra_args: test-s3api:focal-victoria
-- job:
-    name: test-s3api-focal-wallaby
-    parent: func-target
-    dependencies: *smoke-jobs
-    vars:
-      tox_extra_args: test-s3api:focal-wallaby
 - job:
     name: test-s3api-focal-xena
     parent: func-target
-    dependencies: *smoke-jobs
+    dependencies:
+      - charm-build
+      - osci-lint
+      - tox-py38
+      - tox-py39
     vars:
       tox_extra_args: test-s3api:focal-xena
 - job:
     name: test-s3api-focal-yoga
     parent: func-target
-    dependencies: *smoke-jobs
+    dependencies:
+      - test-s3api-focal-xena
     vars:
       tox_extra_args: test-s3api:focal-yoga
 - job:
-    name: test-s3api-hirsute-wallaby
-    parent: func-target
-    dependencies: *smoke-jobs
-    vars:
-      tox_extra_args: test-s3api:hirsute-wallaby
-- job:
     name: test-s3api-impish-xena
     parent: func-target
-    dependencies: *smoke-jobs
+    dependencies:
+      - test-s3api-focal-xena
     vars:
       tox_extra_args: test-s3api:impish-xena
 - job:
     name: test-s3api-jammy-yoga
     parent: func-target
-    dependencies: *smoke-jobs
+    dependencies:
+      - test-s3api-focal-xena
     vars:
       tox_extra_args: test-s3api:jammy-yoga
