@@ -2,30 +2,13 @@ charm_name: swift-proxy
 
 gate_bundles:
   - test-s3api: focal-wallaby
-  - test-s3api: focal-victoria
-  - test-s3api: focal-ussuri
-  - test-s3api: bionic-ussuri
-  - test-s3api: bionic-train
-  - test-s3api: bionic-stein
-  - test-s3api: bionic-rocky
-  - test-s3api: bionic-queens
-  - xenial-mitaka
-  - bionic-train-gr:
-    - swift_gr_region1: bionic-train-gr-r1
-    - swift_gr_region2: bionic-train-gr-r2
+  - test-s3api: focal-xena
 
 dev_bundles:
-  - test-s3api: impish-xena
-  - test-s3api: hirsute-wallaby
-  - test-s3api: focal-xena
-  - trusty-mitaka
-  - test-s3api: xenial-queens
-  - xenial-ocata
-  - xenial-pike
 
 smoke_bundles:
   # Use no s3api test for smoke
-  - focal-ussuri
+  focal-xena
 
 configure:
   - swift_gr_region1:
@@ -42,7 +25,5 @@ tests:
     - zaza.openstack.charm_tests.swift.tests.SwiftGlobalReplicationTests
 
 tests_options:
-  force_deploy:
-    - impish-xena
   policyd:
     - service: swift
