@@ -5,8 +5,6 @@
       jobs:
         - test-s3api-focal-xena
         - test-s3api-focal-wallaby
-        - test-s3api-focal-victoria
-        - test-s3api-focal-ussuri
     vars:
       needs_charm_build: true
       charm_build_name: swift-proxy
