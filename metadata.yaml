@@ -19,7 +19,7 @@ tags:
 - cache-proxy
 series:
 - focal
-- impish
+- jammy
 extra-bindings:
   public:
   admin:

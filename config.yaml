@@ -9,7 +9,7 @@ options:
     description: Enable logging of all request headers.
   openstack-origin:
     type: string
-    default: distro
+    default: yoga
     description: |
       Repository from which to install. May be one of the following:
       distro (default), ppa:somecustom/ppa, a deb url sources entry,
