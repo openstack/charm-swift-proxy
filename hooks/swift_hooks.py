@@ -141,7 +141,12 @@ from charmhelpers.contrib.openstack.cert_utils import (
 
 extra_pkgs = [
     "haproxy",
-    "python-jinja2"
+]
+extra_pkgs_py2 = [
+    "python-jinja2",
+]
+extra_pkgs_py3 = [
+    "python3-jinja2",
 ]
 
 hooks = Hooks()
@@ -164,6 +169,10 @@ def install():
     pkgs = determine_packages(rel)
     apt_install(pkgs, fatal=True)
     apt_install(extra_pkgs, fatal=True)
+    if (sys.version_info > (3, 0)):
+        apt_install(extra_pkgs_py3, fatal=True)
+    else:
+        apt_install(extra_pkgs_py2, fatal=True)
     ensure_swift_dir()
     # configure a directory on webserver for distributing rings.
     ensure_www_dir_permissions(get_www_dir())
