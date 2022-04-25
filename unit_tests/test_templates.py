@@ -45,3 +45,15 @@ class ProxyServerTemplateTestCase(unittest.TestCase):
             self.assertFalse("log_statsd_host" in result)
             self.assertFalse("log_statsd_port" in result)
             self.assertFalse("log_statsd_default_sample_rate" in result)
+
+    def test_keystonemiddleware_config_for_newer_release(self):
+        """Test template should follow newer keystone middleware config."""
+        release = 'yoga'
+        template = self.get_template_for_release(release)
+        result = template.render(auth_type='keystone')
+        self.assertFalse('signing_dir' in result)
+        self.assertFalse('hash_algorithms' in result)
+
+        self.assertTrue('filter:authtoken' in result)
+        self.assertTrue('www_authenticate_uri' in result)
+        self.assertTrue('auth_url' in result)
