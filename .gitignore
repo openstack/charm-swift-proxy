@@ -8,3 +8,4 @@ tags
 *.pyc
 func-results.json
 __pycache__
+*.charm
