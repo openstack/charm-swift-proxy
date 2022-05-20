@@ -18,12 +18,8 @@ tags:
 - openstack
 - cache-proxy
 series:
-- xenial
 - bionic
 - focal
-- groovy
-- hirsute
-- impish
 extra-bindings:
   public:
   admin:

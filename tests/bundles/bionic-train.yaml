@@ -1,7 +1,9 @@
+local_overlay_enabled: False
+
 series: bionic
 applications:
   swift-proxy:
-    charm: swift-proxy
+    charm: ../../swift-proxy.charm
     series: bionic
     num_units: 1
     options:
@@ -10,32 +12,36 @@ applications:
       swift-hash: fdfef9d4-8b06-11e2-8ac0-531c923c8fae
       openstack-origin: cloud:bionic-train
   percona-cluster:
-    charm: cs:~openstack-charmers/percona-cluster
+    charm: ch:percona-cluster
     num_units: 1
     options:
       dataset-size: 25%
       max-connections: 1000
       source: cloud:bionic-train
+    channel: 5.7/edge
   keystone:
     expose: True
-    charm: cs:~openstack-charmers/keystone
+    charm: ch:keystone
     num_units: 1
     options:
       openstack-origin: cloud:bionic-train
+    channel: ussuri/edge
   glance:
     expose: True
-    charm: cs:~openstack-charmers/glance
+    charm: ch:glance
     num_units: 1
     options:
       openstack-origin: cloud:bionic-train
+    channel: ussuri/edge
   swift-storage:
-    charm: cs:~openstack-charmers/swift-storage
+    charm: ch:swift-storage
     num_units: 1
     storage:
       block-devices: 'cinder,10G'
     options:
       openstack-origin: cloud:bionic-train
       zone: 1
+    channel: ussuri/edge
 relations:
 - - keystone:shared-db
   - percona-cluster:shared-db
