@@ -18,8 +18,8 @@ tags:
 - openstack
 - cache-proxy
 series:
-- focal
 - jammy
+- kinetic
 extra-bindings:
   public:
   admin:

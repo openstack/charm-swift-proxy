@@ -1,16 +1,16 @@
 charm_name: swift-proxy
 
 gate_bundles:
-  - test-s3api: focal-xena
-  - test-s3api: impish-xena
+  - test-s3api: jammy-yoga
 
 dev_bundles:
-  - test-s3api: focal-yoga
   - test-s3api: jammy-yoga
+  - test-s3api: jammy-zed
+  - test-s3api: kinetic-zed
 
 smoke_bundles:
   # Use no s3api test for smoke
-  - focal-xena
+  - focal-yoga
 
 configure:
   - swift_gr_region1:
@@ -29,7 +29,6 @@ tests:
 
 tests_options:
   force_deploy:
-    - impish-xena
-    - jammy-yoga
+    - kinetic-zed
   policyd:
     - service: swift

@@ -45,7 +45,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '3'
-    channel: yoga/edge
+    channel: latest/edge
 
   swift-proxy:
     charm: ../../swift-proxy.charm
@@ -66,7 +66,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '5'
-    channel: yoga/edge
+    channel: latest/edge
 
   swift-storage:
     charm: ch:swift-storage
@@ -78,7 +78,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '6'
-    channel: yoga/edge
+    channel: latest/edge
 
 relations:
 
