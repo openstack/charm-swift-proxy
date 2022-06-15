@@ -5,12 +5,8 @@
     check:
       jobs:
         - test-s3api-focal-xena
-        - test-s3api-focal-yoga:
-            voting: false
-        - test-s3api-impish-xena:
-            voting: false
-        - test-s3api-jammy-yoga:
-            voting: false
+        - test-s3api-focal-yoga
+        - test-s3api-jammy-yoga
     vars:
       needs_charm_build: true
       charm_build_name: swift-proxy
@@ -34,13 +30,6 @@
       - test-s3api-focal-xena
     vars:
       tox_extra_args: test-s3api:focal-yoga
-- job:
-    name: test-s3api-impish-xena
-    parent: func-target
-    dependencies:
-      - test-s3api-focal-xena
-    vars:
-      tox_extra_args: test-s3api:impish-xena
 - job:
     name: test-s3api-jammy-yoga
     parent: func-target
