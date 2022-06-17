@@ -22,7 +22,7 @@ nodes. Values include 'manual' (the default) and 'auto'.
 
 ### `replicas`
 
-The `replicas` option stipulates the number of data replicas are needed. This
+The `replicas` option stipulates the number of data replicas that are needed. This
 value should be equal to the number of zones. The default value is '3'.
 
 ## Deployment
