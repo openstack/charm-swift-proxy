@@ -12,7 +12,7 @@
       needs_charm_build: true
       charm_build_name: swift-proxy
       build_type: charmcraft
-      charmcraft_channel: 2.0/stable
+      charmcraft_channel: 2.1/stable
 
 - job:
     name: test-s3api-jammy-yoga
@@ -23,18 +23,18 @@
       - name: tox-py310
         soft: true
     vars:
-      tox_extra_args: test-s3api:jammy-yoga
+      tox_extra_args: '-- test-s3api:jammy-yoga'
 - job:
     name: test-s3api-jammy-zed
     parent: func-target
     dependencies:
       - test-s3api-jammy-yoga
     vars:
-      tox_extra_args: test-s3api:jammy-zed
+      tox_extra_args: '-- test-s3api:jammy-zed'
 - job:
     name: test-s3api-kinetic-zed
     parent: func-target
     dependencies:
       - test-s3api-jammy-yoga
     vars:
-      tox_extra_args: test-s3api:kinetic-zed
+      tox_extra_args: '-- test-s3api:kinetic-zed'
