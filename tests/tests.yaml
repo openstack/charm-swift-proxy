@@ -1,16 +1,16 @@
 charm_name: swift-proxy
 
 gate_bundles:
-  - test-s3api: jammy-yoga
+  - test-s3api: jammy-zed
 
 dev_bundles:
-  - test-s3api: jammy-yoga
-  - test-s3api: jammy-zed
+  - test-s3api: jammy-antelope
   - test-s3api: kinetic-zed
+  - test-s3api: lunar-antelope
 
 smoke_bundles:
   # Use no s3api test for smoke
-  - jammy-yoga
+  - jammy-zed
 
 configure:
   - swift_gr_region1:
@@ -30,5 +30,6 @@ tests:
 tests_options:
   force_deploy:
     - kinetic-zed
+    - lunar-antelope
   policyd:
     - service: swift

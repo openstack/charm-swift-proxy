@@ -3,10 +3,12 @@
       - charm-unit-jobs-py310
     check:
       jobs:
-        - test-s3api-jammy-yoga
-        - test-s3api-jammy-zed:
-            voting: false
+        - test-s3api-jammy-zed
         - test-s3api-kinetic-zed:
+            voting: false
+        - test-s3api-jammy-antelope:
+            voting: false
+        - test-s3api-lunar-antelope:
             voting: false
     vars:
       needs_charm_build: true
@@ -15,7 +17,7 @@
       charmcraft_channel: 2.1/stable
 
 - job:
-    name: test-s3api-jammy-yoga
+    name: test-s3api-jammy-zed
     parent: func-target
     dependencies:
       - charm-build
@@ -23,18 +25,25 @@
       - name: tox-py310
         soft: true
     vars:
-      tox_extra_args: '-- test-s3api:jammy-yoga'
-- job:
-    name: test-s3api-jammy-zed
-    parent: func-target
-    dependencies:
-      - test-s3api-jammy-yoga
-    vars:
       tox_extra_args: '-- test-s3api:jammy-zed'
 - job:
     name: test-s3api-kinetic-zed
     parent: func-target
     dependencies:
-      - test-s3api-jammy-yoga
+      - test-s3api-jammy-zed
     vars:
       tox_extra_args: '-- test-s3api:kinetic-zed'
+- job:
+    name: test-s3api-jammy-antelope
+    parent: func-target
+    dependencies:
+      - test-s3api-jammy-zed
+    vars:
+      tox_extra_args: '-- test-s3api:jammy-antelope'
+- job:
+    name: test-s3api-lunar-antelope
+    parent: func-target
+    dependencies:
+      - test-s3api-jammy-zed
+    vars:
+      tox_extra_args: '-- test-s3api:lunar-antelope'
