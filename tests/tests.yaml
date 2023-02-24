@@ -10,7 +10,7 @@ dev_bundles:
 
 smoke_bundles:
   # Use no s3api test for smoke
-  - focal-yoga
+  - jammy-yoga
 
 configure:
   - swift_gr_region1:

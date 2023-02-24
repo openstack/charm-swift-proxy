@@ -22,6 +22,7 @@ from charmhelpers.contrib.openstack.context import (
 from charmhelpers.contrib.hahelpers.cluster import (
     determine_api_port,
     determine_apache_port,
+    https,
 )
 from charmhelpers.contrib.network.ip import (
     format_ipv6_addr,
@@ -54,8 +55,17 @@ class HAProxyContext(OSContextGenerator):
         api_port = determine_apache_port(config('bind-port'),
                                          singlenode_mode=True)
 
+        healthcheck = [{
+            'option': 'httpchk GET /healthcheck',
+            'http-check': 'expect status 200',
+        }]
+
+        backend_options = {'swift_api': healthcheck}
+
         ctxt = {
             'service_ports': {'swift_api': [haproxy_port, api_port]},
+            'backend_options': backend_options,
+            'https': https()
         }
         return ctxt
 
