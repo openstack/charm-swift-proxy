@@ -5,7 +5,6 @@ gate_bundles:
 
 dev_bundles:
   - test-s3api: jammy-antelope
-  - test-s3api: kinetic-zed
   - test-s3api: lunar-antelope
 
 smoke_bundles:
@@ -29,7 +28,6 @@ tests:
 
 tests_options:
   force_deploy:
-    - kinetic-zed
     - lunar-antelope
   policyd:
     - service: swift
