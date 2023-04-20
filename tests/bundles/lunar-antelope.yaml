@@ -21,21 +21,21 @@ applications:
 
   keystone-mysql-router:
     charm: ch:mysql-router
-    channel: latest/edge
+    channel: 8.0/edge
   glance-mysql-router:
     charm: ch:mysql-router
-    channel: latest/edge
+    channel: 8.0/edge
 
   mysql-innodb-cluster:
     charm: ch:mysql-innodb-cluster
     num_units: 3
     options:
-      source: *openstack-origin
+      source: distro
     to:
       - '0'
       - '1'
       - '2'
-    channel: latest/edge
+    channel: 8.0/edge
 
   keystone:
     expose: True
@@ -45,7 +45,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '3'
-    channel: latest/edge
+    channel: 2023.1/edge
 
   swift-proxy:
     charm: ../../swift-proxy.charm
@@ -66,7 +66,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '5'
-    channel: latest/edge
+    channel: 2023.1/edge
 
   swift-storage:
     charm: ch:swift-storage
@@ -78,7 +78,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '6'
-    channel: latest/edge
+    channel: 2023.1/edge
 
 relations:
 
