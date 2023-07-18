@@ -3,9 +3,12 @@
       - charm-unit-jobs-py310
     check:
       jobs:
-        - test-s3api-jammy-zed
         - test-s3api-jammy-antelope
+        - test-s3api-jammy-bobcat:
+            voting: false
         - test-s3api-lunar-antelope:
+            voting: false
+        - test-s3api-mantic-bobcat:
             voting: false
     vars:
       needs_charm_build: true
@@ -14,7 +17,7 @@
       charmcraft_channel: 2.1/stable
 
 - job:
-    name: test-s3api-jammy-zed
+    name: test-s3api-jammy-antelope
     parent: func-target
     dependencies:
       - charm-build
@@ -22,18 +25,25 @@
       - name: tox-py310
         soft: true
     vars:
-      tox_extra_args: '-- test-s3api:jammy-zed'
+      tox_extra_args: '-- test-s3api:jammy-antelope'
 - job:
-    name: test-s3api-jammy-antelope
+    name: test-s3api-jammy-bobcat
     parent: func-target
     dependencies:
-      - test-s3api-jammy-zed
+      - test-s3api-jammy-antelope
     vars:
-      tox_extra_args: '-- test-s3api:jammy-antelope'
+      tox_extra_args: '-- test-s3api:jammy-bobcat'
 - job:
     name: test-s3api-lunar-antelope
     parent: func-target
     dependencies:
-      - test-s3api-jammy-zed
+      - test-s3api-jammy-antelope
     vars:
       tox_extra_args: '-- test-s3api:lunar-antelope'
+- job:
+    name: test-s3api-mantic-bobcat
+    parent: func-target
+    dependencies:
+      - test-s3api-jammy-antelope
+    vars:
+      tox_extra_args: '-- test-s3api:mantic-bobcat'
