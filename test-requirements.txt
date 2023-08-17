@@ -10,6 +10,7 @@
 pyparsing<3.0.0  # cffi needs pyparsing < 3.0.0.
 cffi==1.14.6; python_version < '3.6'  # cffi 1.15.0 drops support for py35.
 setuptools<50.0.0  # https://github.com/pypa/setuptools/commit/04e3df22df840c6bb244e9b27bc56750c44b7c85
+testtools<2.6.0
 
 requests>=2.18.4
 
