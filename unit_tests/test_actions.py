@@ -294,7 +294,7 @@ class DiskUsageTestCase(CharmTestCase):
         self.check_output.assert_called_once_with(['swift-recon', '-d'])
 
         self.action_set.assert_called()
-        self.action_fail.not_called()
+        self.action_fail.assert_not_called()
 
     def test_check_output_failure(self):
         """Ensure that action_fail and action_set are called on
