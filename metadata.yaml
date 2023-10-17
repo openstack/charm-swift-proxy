@@ -19,7 +19,6 @@ tags:
 - cache-proxy
 series:
 - jammy
-- lunar
 - mantic
 extra-bindings:
   public:

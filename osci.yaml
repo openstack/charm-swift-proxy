@@ -6,15 +6,13 @@
         - test-s3api-jammy-antelope
         - test-s3api-jammy-bobcat:
             voting: false
-        - test-s3api-lunar-antelope:
-            voting: false
         - test-s3api-mantic-bobcat:
             voting: false
     vars:
       needs_charm_build: true
       charm_build_name: swift-proxy
       build_type: charmcraft
-      charmcraft_channel: 2.1/stable
+      charmcraft_channel: 2.x/stable
 
 - job:
     name: test-s3api-jammy-antelope
@@ -33,13 +31,6 @@
       - test-s3api-jammy-antelope
     vars:
       tox_extra_args: '-- test-s3api:jammy-bobcat'
-- job:
-    name: test-s3api-lunar-antelope
-    parent: func-target
-    dependencies:
-      - test-s3api-jammy-antelope
-    vars:
-      tox_extra_args: '-- test-s3api:lunar-antelope'
 - job:
     name: test-s3api-mantic-bobcat
     parent: func-target
