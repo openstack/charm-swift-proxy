@@ -1,7 +1,7 @@
 variables:
   openstack-origin: &openstack-origin distro
 
-series: mantic
+series: noble
 
 comment:
 - 'machines section to decide order of deployment. database sooner = faster'
@@ -45,7 +45,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '3'
-    channel: latest/edge
+    channel: 2024.1/edge
 
   swift-proxy:
     charm: ../../swift-proxy.charm
@@ -66,7 +66,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '5'
-    channel: latest/edge
+    channel: 2024.1/edge
 
   swift-storage:
     charm: ch:swift-storage
@@ -78,7 +78,7 @@ applications:
       openstack-origin: *openstack-origin
     to:
       - '6'
-    channel: latest/edge
+    channel: 2024.1/edge
 
 relations:
 

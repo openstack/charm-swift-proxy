@@ -14,7 +14,7 @@
       needs_charm_build: true
       charm_build_name: swift-proxy
       build_type: charmcraft
-      charmcraft_channel: 2.1/stable
+      charmcraft_channel: 2.x/stable
 
 - job:
     name: test-s3api-jammy-antelope

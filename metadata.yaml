@@ -15,12 +15,10 @@ description: |
   This charm deploys the Swift proxy service, providing HTTP based access
   onto underlying Swift storage services.
 tags:
-- openstack
-- cache-proxy
+  - openstack
+  - cache-proxy
 series:
-- jammy
-- lunar
-- mantic
+  - jammy
 extra-bindings:
   public:
   admin:
