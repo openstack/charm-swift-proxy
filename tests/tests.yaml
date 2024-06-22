@@ -1,14 +1,12 @@
 charm_name: swift-proxy
 
 gate_bundles:
-  - jammy-antelope
-  - jammy-bobcat
-  - jammy-caracal
+  - noble-caracal
 dev_bundles:
   - noble-caracal
 smoke_bundles:
   # Use no s3api test for smoke
-  - jammy-caracal
+  - noble-caracal
 configure:
   - swift_gr_region1:
       - zaza.openstack.charm_tests.swift.setup.wait_for_region2
@@ -25,7 +23,5 @@ tests:
       - zaza.openstack.charm_tests.swift.tests.SwiftProxyMultiZoneTests
 
 tests_options:
-  force_deploy:
-    - noble-caracal
   policyd:
     - service: swift
