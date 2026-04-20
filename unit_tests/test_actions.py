@@ -92,7 +92,7 @@ class PauseTestCase(CharmTestCase):
                 return True
 
         self.service_pause.side_effect = maybe_kill
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             Exception, "haproxy didn't stop cleanly.",
             actions.actions.pause, self.args)
         self.assertEqual(pause_calls, ["swift-proxy"])
@@ -146,7 +146,7 @@ class ResumeTestCase(CharmTestCase):
                 return True
 
         self.service_resume.side_effect = maybe_kill
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             Exception, "apache2 didn't start cleanly.",
             actions.actions.resume, self.args)
         self.assertEqual(resume_calls, ['swift-proxy', 'memcached'])
@@ -294,7 +294,7 @@ class DiskUsageTestCase(CharmTestCase):
         self.check_output.assert_called_once_with(['swift-recon', '-d'])
 
         self.action_set.assert_called()
-        self.action_fail.not_called()
+        self.action_fail.assert_not_called()
 
     def test_check_output_failure(self):
         """Ensure that action_fail and action_set are called on
