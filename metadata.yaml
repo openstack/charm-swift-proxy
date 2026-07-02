@@ -19,8 +19,6 @@ tags:
 - cache-proxy
 series:
 - jammy
-- kinetic
-- lunar
 extra-bindings:
   public:
   admin:
