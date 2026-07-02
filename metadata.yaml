@@ -19,7 +19,6 @@ tags:
 - cache-proxy
 series:
 - jammy
-- mantic
 extra-bindings:
   public:
   admin:
