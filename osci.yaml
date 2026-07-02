@@ -4,12 +4,9 @@
     check:
       jobs:
         - test-s3api-jammy-antelope
-        - test-s3api-jammy-bobcat:
-            voting: false
-        - test-s3api-lunar-antelope:
-            voting: false
-        - test-s3api-mantic-bobcat:
-            voting: false
+        - test-s3api-jammy-bobcat
+        - test-s3api-jammy-caracal
+        - test-s3api-noble-caracal
     vars:
       needs_charm_build: true
       charm_build_name: swift-proxy
@@ -34,16 +31,16 @@
     vars:
       tox_extra_args: '-- test-s3api:jammy-bobcat'
 - job:
-    name: test-s3api-lunar-antelope
+    name: test-s3api-jammy-caracal
     parent: func-target
     dependencies:
-      - test-s3api-jammy-antelope
+      - test-s3api-jammy-bobcat
     vars:
-      tox_extra_args: '-- test-s3api:lunar-antelope'
+      tox_extra_args: '-- test-s3api:jammy-caracal'
 - job:
-    name: test-s3api-mantic-bobcat
+    name: test-s3api-noble-caracal
     parent: func-target
     dependencies:
-      - test-s3api-jammy-antelope
+      - test-s3api-jammy-bobcat
     vars:
-      tox_extra_args: '-- test-s3api:mantic-bobcat'
+      tox_extra_args: '-- test-s3api:noble-caracal'
