@@ -6,13 +6,11 @@
         - test-s3api-jammy-yoga
         - test-s3api-jammy-zed:
             voting: false
-        - test-s3api-kinetic-zed:
-            voting: false
     vars:
       needs_charm_build: true
       charm_build_name: swift-proxy
       build_type: charmcraft
-      charmcraft_channel: 2.0/stable
+      charmcraft_channel: 3.x/stable
 
 - job:
     name: test-s3api-jammy-yoga
@@ -31,10 +29,3 @@
       - test-s3api-jammy-yoga
     vars:
       tox_extra_args: test-s3api:jammy-zed
-- job:
-    name: test-s3api-kinetic-zed
-    parent: func-target
-    dependencies:
-      - test-s3api-jammy-yoga
-    vars:
-      tox_extra_args: test-s3api:kinetic-zed

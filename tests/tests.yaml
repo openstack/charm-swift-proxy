@@ -6,7 +6,6 @@ gate_bundles:
 dev_bundles:
   - test-s3api: jammy-yoga
   - test-s3api: jammy-zed
-  - test-s3api: kinetic-zed
 
 smoke_bundles:
   # Use no s3api test for smoke
@@ -28,7 +27,5 @@ tests:
     - zaza.openstack.charm_tests.swift.tests.SwiftProxyMultiZoneTests
 
 tests_options:
-  force_deploy:
-    - kinetic-zed
   policyd:
     - service: swift
